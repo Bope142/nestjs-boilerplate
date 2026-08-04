@@ -1,0 +1,84 @@
+---
+description: PostgreSQL and Drizzle ORM schema, query, transaction, index, and migration rules
+globs:
+  - "src/**/*.schema.ts"
+  - "src/**/schemas/**/*.ts"
+  - "src/database/schema/**/*.ts"
+  - "src/**/repositories/**/*.ts"
+  - "drizzle.config.ts"
+  - "drizzle/**/*.sql"
+alwaysApply: false
+---
+
+# Drizzle ORM and PostgreSQL
+
+## Core rules
+
+- PostgreSQL is the source of truth.
+- Drizzle ORM for queries; Drizzle Kit for migrations.
+- Generated SQL under `drizzle/` committed to version control.
+- Do not use `drizzle-kit push` against shared/staging/production databases.
+- Review generated SQL before applying.
+- Never edit migrations already applied to shared environments.
+
+## Schema conventions
+
+Every table should have:
+
+- Stable primary key (UUID preferred).
+- Explicit nullability and foreign keys.
+- `created_at`; `updated_at` when mutable.
+- Database constraints for invariants.
+- snake_case TypeScript column keys matching SQL names.
+
+Use PostgreSQL types appropriately: `uuid`, `timestamptz`, `jsonb` for flexible metadata, enums for stable closed sets.
+
+## Naming
+
+snake_case for SQL and Drizzle keys: `user_id`, `created_at`, `refresh_token_hash`.
+
+Name constraints and indexes when practical:
+
+```text
+users_email_uq
+auth_sessions_user_id_idx
+```
+
+## Foreign keys
+
+- `RESTRICT` when history must be preserved.
+- `CASCADE` only when child has no meaning without parent.
+- `SET NULL` for optional relationships.
+
+## Indexes
+
+Index based on query patterns: FK columns used in joins, `(status, created_at)` for queues, partial indexes when justified.
+
+## Query rules
+
+- Select only required columns on sensitive/large tables.
+- Paginate collections; deterministic ordering.
+- Parameterized Drizzle only; never concatenate user input.
+- Use row locking when check-then-act races matter.
+
+## Time
+
+- Store instants as UTC `timestamptz`.
+- Return ISO 8601 from APIs.
+
+## Transactions
+
+Use `db.transaction()` for atomic multi-step writes. Do not hold transactions during email, HTTP calls, or file I/O.
+
+## Migrations
+
+```bash
+pnpm db:generate
+pnpm db:migrate
+```
+
+Review for accidental drops, lock-heavy ops, non-null on populated tables, enum changes, and backfill needs.
+
+## Seeds
+
+Deterministic dev seeds only; never seed production with fake sensitive data.

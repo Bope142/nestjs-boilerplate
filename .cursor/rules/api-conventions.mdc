@@ -1,0 +1,97 @@
+---
+description: REST API naming, versioning, pagination, response, validation, and OpenAPI conventions
+globs:
+  - "src/**/*controller.ts"
+  - "src/**/dto/**/*.ts"
+  - "src/**/*presenter.ts"
+alwaysApply: false
+---
+
+# API Conventions
+
+## General
+
+- Use RESTful resources.
+- Global prefix: `/api` (add URI versioning `/api/v1` when you need breaking changes).
+- Use plural resource names.
+- Use kebab-case paths.
+- Do not put verbs in resource paths unless modeling an explicit action or state transition.
+
+Examples:
+
+```text
+GET    /api/users
+GET    /api/users/:id
+POST   /api/auth/login
+POST   /api/auth/refresh
+PATCH  /api/users/:id
+```
+
+## Status codes
+
+- `200 OK` — successful read/update with body.
+- `201 Created` — creation.
+- `204 No Content` — success without body.
+- `400 Bad Request` — malformed input.
+- `401 Unauthorized` — missing/invalid authentication.
+- `403 Forbidden` — authenticated but not permitted.
+- `404 Not Found` — missing resource.
+- `409 Conflict` — uniqueness or state conflict.
+- `429 Too Many Requests` — throttling.
+
+## Response shape
+
+Use consistent envelopes if adopted project-wide:
+
+```json
+{ "data": {} }
+```
+
+```json
+{
+  "data": [],
+  "meta": { "page": 1, "pageSize": 20, "total": 100, "pageCount": 5 }
+}
+```
+
+Errors:
+
+```json
+{
+  "statusCode": 409,
+  "code": "RESOURCE_CONFLICT",
+  "message": "Human-readable message.",
+  "requestId": "..."
+}
+```
+
+Do not include stack traces or raw internal errors.
+
+## Pagination
+
+- Default page size: 20; max: 100.
+- Validate positive integers.
+- Deterministic ordering with a unique tie-breaker.
+- Consider cursor pagination for high-volume streams.
+
+## Filtering and sorting
+
+- Explicit filter DTOs.
+- Allowlist sortable fields.
+- Never pass arbitrary client field names into SQL.
+
+## DTOs and serialization
+
+- Validate all input.
+- Use response DTOs or presenters.
+- Serialize dates as ISO 8601.
+- Do not expose token hashes or internal secrets.
+- Do not accept server-managed fields from clients (`createdBy`, `status`, etc.).
+
+## OpenAPI
+
+Document summary, auth, parameters, body, success response, common errors, and pagination. Swagger must match actual guards and validation.
+
+## Deprecation
+
+For breaking changes: introduce compatible version or field, mark deprecated, communicate removal date, remove only after consumers migrate.

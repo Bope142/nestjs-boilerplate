@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+set -eu
+
+if ! command -v pnpm >/dev/null 2>&1; then
+  echo "pnpm is required to run the pre-push checks." >&2
+  echo "Run: corepack enable && corepack prepare pnpm@10.1.0 --activate" >&2
+  echo "Then: pnpm install" >&2
+  exit 1
+fi
+
+echo "Running pre-push checks..."
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build

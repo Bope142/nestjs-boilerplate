@@ -1,0 +1,77 @@
+---
+description: Security requirements for authentication, authorization, validation, secrets, and logging
+globs:
+  - "src/**/*.ts"
+  - ".env.example"
+alwaysApply: false
+---
+
+# Security
+
+## Baseline
+
+Treat every external input as untrusted. Defense in depth: authentication, authorization, validation, DB constraints, safe logging, rate limiting, audit logging.
+
+## Authentication
+
+- Hash passwords with Argon2id; never encrypt or log credentials.
+- Short-lived access tokens; longer refresh tokens; separate secrets.
+- Store refresh tokens hashed in `auth_sessions`.
+- Rotate refresh tokens; revoke families on reuse when supported.
+- OTP, reset, and magic-link tokens: random, hashed at rest, single-use, expiring.
+- Avoid account enumeration in auth error messages.
+
+## Authorization
+
+Authentication is not authorization. Verify active account, required role/permission, resource policy, and allowed state transitions on protected actions.
+
+Prefer permission decorators and central guards over scattered role checks.
+
+## Validation
+
+```ts
+new ValidationPipe({
+  whitelist: true,
+  forbidNonWhitelisted: true,
+  transform: true,
+})
+```
+
+Set max lengths; validate UUIDs, emails, enums; reject server-managed fields from clients.
+
+## HTTP security
+
+- Helmet, strict CORS allowlist, HTTPS in production.
+- Rate limits on auth, password reset, and sensitive endpoints.
+- Request body size limits.
+
+## Injection protection
+
+- Parameterized Drizzle queries only.
+- Allowlist sort/filter fields.
+
+## Mass assignment
+
+Map DTO fields explicitly in repositories/services; never pass raw DTOs to persistence.
+
+## Secrets
+
+- Never commit `.env`.
+- Fail startup on missing required secrets.
+- Separate secrets per environment; rotate on compromise.
+
+## Logging
+
+Include request/correlation ID, route, status, duration, actor when safe. Redact authorization headers, cookies, passwords, tokens, OTPs.
+
+## Audit logs
+
+Append-only audit for role changes, auth security events, sensitive data changes. Include actor, action, target, timestamp, safe metadata.
+
+## Error responses
+
+Stable shape and codes; no stack traces, SQL text, or internal hostnames.
+
+## Dependency security
+
+Commit lockfile; review new dependencies; run audits in CI.

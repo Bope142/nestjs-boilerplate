@@ -1,0 +1,9 @@
+# Example CODEOWNERS file. Rename to CODEOWNERS when ownership is defined.
+
+# Global backend ownership
+* @backend-team
+
+# High-risk finance changes should receive extra review.
+/src/modules/finance/ @finance-reviewers
+/docs/finance/ @finance-reviewers
+/drizzle/ @database-reviewers

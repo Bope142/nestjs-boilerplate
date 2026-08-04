@@ -1,0 +1,17 @@
+---
+description: Always run pnpm run lint after code changes before considering the task done
+alwaysApply: true
+---
+
+# Lint After Every Change
+
+After any code modification, bug fix, refactor, schema change, or feature addition:
+
+1. Run `pnpm run lint` before reporting the task complete.
+2. Fix lint errors introduced by the change.
+3. Re-run `pnpm run lint` until it passes, or report remaining failures honestly.
+4. Never claim lint passed unless the command was actually executed in this session.
+
+Also run relevant tests and `pnpm typecheck` when those scripts exist and the change warrants them — but **lint is mandatory every time**.
+
+Use the `verify-changes` skill for the full post-change checklist.

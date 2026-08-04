@@ -1,0 +1,72 @@
+---
+description: Testing strategy and minimum coverage expectations for backend features
+globs:
+  - "src/**/*.spec.ts"
+  - "test/**/*.ts"
+  - "src/**/*.ts"
+alwaysApply: false
+---
+
+# Testing
+
+## Goals
+
+Protect business behavior, authorization, and critical regressions. Do not optimize for coverage percentage alone.
+
+## Test levels
+
+### Unit tests
+
+Pure logic, mappers, policies, error branches. Mock external boundaries, not the unit under test.
+
+### Integration tests
+
+Real PostgreSQL for repositories, constraints, transactions, indexes. Prefer Testcontainers or isolated Postgres — not SQLite as a substitute.
+
+### End-to-end tests
+
+Nest + Supertest for auth, validation, guards, routing, serialization, error shape.
+
+## Mandatory endpoint cases
+
+When applicable:
+
+- Success, invalid input, missing auth, invalid/expired auth, forbidden, not found, conflict, stable error response.
+- Pagination limits and sort allowlists for collections.
+
+Prefer IDOR and permission tests over hypothetical multi-tenant cases.
+
+## Test isolation
+
+Independent tests; reset DB state; deterministic factories; no production credentials; mock mail/SMS/queues.
+
+## Naming
+
+Behavior-focused: `it('rejects refresh when session is revoked')` — not `it('works')`.
+
+## Mocking rules
+
+- Do not mock Drizzle in repository integration tests.
+- Do not mock the service under test.
+- Mock external I/O through interfaces.
+
+## Commands
+
+```bash
+pnpm test
+pnpm test:watch
+pnpm test:cov
+pnpm test:e2e
+```
+
+## Completion rule
+
+After implementation:
+
+1. `pnpm run lint` (mandatory).
+2. Narrowest relevant tests.
+3. Module/integration/e2e for changed boundaries.
+4. `pnpm typecheck` when types or schema changed.
+5. Report commands executed honestly.
+
+Never claim tests pass unless executed.

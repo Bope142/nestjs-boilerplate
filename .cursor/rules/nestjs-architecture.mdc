@@ -1,0 +1,96 @@
+---
+description: NestJS module organization, dependency boundaries, naming, and implementation conventions
+globs:
+  - "src/**/*.ts"
+alwaysApply: false
+---
+
+# NestJS Architecture
+
+## Architectural style
+
+Modular monolith. Business modules under `src/modules/`:
+
+```text
+src/modules/example/
+├── example.module.ts
+├── example.controller.ts
+├── example.service.ts
+├── dto/
+├── example.repository.ts
+└── tests/
+```
+
+Supporting folders:
+
+- `src/common` — reusable NestJS building blocks.
+- `src/config` — typed configuration.
+- `src/database` — Drizzle integration.
+- `src/integrations` — email and external adapters.
+- `src/jobs` — BullMQ jobs.
+- `src/health` — health checks.
+
+## Layer responsibilities
+
+### Controllers
+
+- Parse transport input; decorators for auth, validation, Swagger.
+- Call one service method; return DTO/presenter.
+- No database access or heavy business logic.
+
+### Services
+
+- Use cases and business rules.
+- Coordinate repositories, transactions, adapters.
+- Throw typed application exceptions.
+
+### Repositories
+
+- Encapsulate Drizzle queries; explicit types.
+- Support transaction client parameter.
+- Authorization remains in services/guards.
+
+### DTOs
+
+- Transport-specific; validate every field.
+- Reject unknown properties via global ValidationPipe.
+- Never include server-controlled fields.
+
+Never expose password hashes, refresh-token hashes, or reset token hashes.
+
+## Dependency rules
+
+- Business modules depend on shared infrastructure through exported providers.
+- Avoid circular module dependencies; do not default to `forwardRef()`.
+- External SDKs behind interfaces in `src/integrations` when practical.
+
+## Naming
+
+- Files: kebab-case.
+- Classes: PascalCase.
+- Methods/variables: camelCase.
+- Constants: UPPER_SNAKE_CASE.
+
+## Error handling
+
+- Typed errors mapped centrally.
+- No SQL/stack leakage to clients.
+- Map constraint failures to stable API codes when appropriate.
+
+## Transactions
+
+Use for multi-step state changes: token consumption + user update, session rotation races, etc. Keep callbacks small; no slow external calls inside transactions.
+
+## Configuration
+
+- Validate env at startup.
+- Typed config service; avoid scattered `process.env`.
+- Fail fast on missing required values.
+- `.env.example` placeholders only.
+
+## Bootstrap expectations
+
+- Global prefix `/api`.
+- ValidationPipe: whitelist, forbidNonWhitelisted, transform.
+- Helmet, CORS allowlist, exception filter, rate limiting where applicable.
+- Swagger per environment policy.

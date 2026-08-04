@@ -1,0 +1,20 @@
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6;">
+  Bonjour <%= firstName %>,
+</p>
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6;">
+  Merci de vous être inscrit. Veuillez vérifier votre adresse e-mail pour activer votre compte.
+</p>
+<p style="margin:0 0 24px;">
+  <a href="<%= verifyUrl %>" style="display:inline-block;background:#1a1a1a;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:6px;font-size:14px;">
+    Vérifier mon e-mail
+  </a>
+</p>
+<p style="margin:0 0 8px;font-size:14px;line-height:1.5;color:#333;">
+  Vous pouvez aussi copier ce code dans l’application :
+</p>
+<p style="margin:0 0 24px;font-family:Consolas,Menlo,monospace;font-size:16px;line-height:1.5;background:#f4f4f4;border-radius:6px;padding:12px;color:#111;word-break:break-all;">
+  <%= otpCode %>
+</p>
+<p style="margin:0;font-size:13px;line-height:1.5;color:#666;">
+  Ce lien et ce code expirent dans <%= expiresInMinutes %> minutes. Si vous n’avez pas créé de compte, ignorez cet e-mail.
+</p>
