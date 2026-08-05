@@ -1,0 +1,10 @@
+{
+  "REMINDER_NOT_FOUND": "Rappel introuvable.",
+  "REMINDER_FORBIDDEN": "Accès non autorisé à ce rappel.",
+  "REMINDER_MAX_ACTIVE_REACHED": "Nombre maximum de rappels actifs atteint pour cet utilisateur.",
+  "REMINDER_MAX_SLOTS_EXCEEDED": "Nombre maximum de créneaux horaires dépassé.",
+  "REMINDER_MAX_CHANNELS_EXCEEDED": "Nombre maximum de canaux dépassé.",
+  "REMINDER_INVALID_SCHEDULE": "Configuration de planification du rappel invalide.",
+  "REMINDER_INVALID_OWNER": "Un rappel doit appartenir soit à un utilisateur, soit à un e-mail invité.",
+  "REMINDER_INVALID_STATUS_TRANSITION": "Transition de statut du rappel non autorisée."
+}

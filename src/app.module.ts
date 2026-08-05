@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuditModule } from './common/audit/audit.module';
 import { CacheModule } from './common/cache/cache.module';
+import { AppI18nModule } from './common/i18n/app-i18n.module';
 import { HttpRequestLoggingInterceptor } from './common/interceptors/http-request-logging.interceptor';
 import { getThrottleConfig } from './config/throttle.config';
 import { DrizzleModule } from './database/drizzle.module';
@@ -21,6 +22,7 @@ import { HealthModule } from './health/health.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    AppI18nModule,
     ThrottlerModule.forRootAsync({
       useFactory: () => {
         const throttle = getThrottleConfig();

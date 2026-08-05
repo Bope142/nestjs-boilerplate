@@ -10,9 +10,10 @@
 src/
 ├── main.ts                 # Bootstrap, Swagger, global pipes/filters
 ├── app.module.ts
-├── common/                 # Guards, filters, decorators, shared types
+├── common/                 # Guards, filters, decorators, shared types, i18n
 ├── config/                 # Env validation and typed configuration
 ├── database/               # Drizzle client, schema, migrations wiring
+├── i18n/                   # fr/en JSON catalogs (API messages)
 ├── integrations/           # Email, external APIs
 ├── jobs/                   # BullMQ processors and schedulers
 ├── health/                 # Health checks
@@ -33,8 +34,9 @@ src/
 ## Cross-cutting
 
 - **Auth:** JWT access + refresh sessions, API key on auth routes, Argon2 passwords.
-- **Validation:** global `ValidationPipe` with whitelist and forbid unknown properties.
-- **Errors:** centralized exception filter; stable error codes for clients.
+- **Validation:** global `AppI18nValidationPipe` with whitelist and forbid unknown properties.
+- **i18n:** `nestjs-i18n` with `fr` default/fallback and `en`; stable error `code` + translated `message`.
+- **Errors:** centralized exception filter; stable prefixed error codes for clients.
 - **Observability:** structured logging; audit log table for sensitive actions.
 - **Cache / queues:** Redis optional; BullMQ for async email and reminder dispatch.
 

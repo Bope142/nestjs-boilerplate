@@ -1,8 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
+import { AllExceptionsFilter } from '../src/common/filters/all-exceptions.filter';
+import { AppI18nValidationPipe } from '../src/common/i18n/i18n-validation.pipe';
 import { EMAIL_SENDER } from '../src/integrations/email/email-sender.port';
 import { InMemoryEmailSender } from '../src/integrations/email/in-memory-email.sender';
 import { validateEnvironment } from '../src/config/env.validation';
@@ -44,8 +46,9 @@ describe('Auth (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalFilters(new AllExceptionsFilter());
     app.useGlobalPipes(
-      new ValidationPipe({
+      new AppI18nValidationPipe({
         whitelist: true,
         transform: true,
         forbidNonWhitelisted: true,
@@ -155,8 +158,22 @@ describe('Auth (e2e)', () => {
       .expect(403);
 
     expect(meUnverified.body).toMatchObject({
-      code: 'EMAIL_NOT_VERIFIED',
+      code: 'AUTH_EMAIL_NOT_VERIFIED',
     });
+    expect(meUnverified.headers['content-language']).toBe('fr');
+
+    const meUnverifiedEn = await request(app.getHttpServer())
+      .get('/api/users/me')
+      .set('x-api-key', apiKey)
+      .set('Authorization', `Bearer ${registerBody.session.accessToken}`)
+      .set('Accept-Language', 'en')
+      .expect(403);
+
+    expect(meUnverifiedEn.body).toMatchObject({
+      code: 'AUTH_EMAIL_NOT_VERIFIED',
+      message: 'Email address must be verified to access this resource.',
+    });
+    expect(meUnverifiedEn.headers['content-language']).toBe('en');
 
     const verificationToken = extractTokenFromMail();
     const verificationOtp = extractOtpFromMail();

@@ -363,7 +363,7 @@ export class RemindersService implements ReminderPort {
       channels = channels.filter((channel) => channel !== 'IN_APP');
     }
     if (channels.length === 0) {
-      reminderInvalidSchedule('Au moins un canal de notification est requis');
+      reminderInvalidSchedule();
     }
 
     this.assertLimits(channels, input.timeSlots, jobs);
@@ -524,11 +524,11 @@ export class RemindersService implements ReminderPort {
     ].sort((a, b) => a.localeCompare(b));
 
     if (timeSlots.length === 0) {
-      reminderInvalidSchedule('Au moins un créneau horaire est requis');
+      reminderInvalidSchedule();
     }
 
     if (input.channels.length === 0) {
-      reminderInvalidSchedule('Au moins un canal de notification est requis');
+      reminderInvalidSchedule();
     }
 
     switch (input.scheduleType) {
@@ -549,9 +549,7 @@ export class RemindersService implements ReminderPort {
           ),
         ].sort((a, b) => a - b);
         if (weeklyDays.length === 0) {
-          reminderInvalidSchedule(
-            'Les jours de la semaine sont requis pour un rappel hebdomadaire',
-          );
+          reminderInvalidSchedule();
         }
         return {
           ...input,
@@ -563,9 +561,7 @@ export class RemindersService implements ReminderPort {
       }
       case 'DEADLINE_OFFSET': {
         if (!input.deadlineAt || Number.isNaN(input.deadlineAt.getTime())) {
-          reminderInvalidSchedule(
-            'Une date limite est requise pour un rappel à échéance',
-          );
+          reminderInvalidSchedule();
         }
         const offsetDays = [
           ...new Set(
@@ -575,9 +571,7 @@ export class RemindersService implements ReminderPort {
           ),
         ].sort((a, b) => b - a);
         if (offsetDays.length === 0) {
-          reminderInvalidSchedule(
-            'Les décalages (offsetDays) sont requis pour un rappel à échéance',
-          );
+          reminderInvalidSchedule();
         }
         return {
           ...input,

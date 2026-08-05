@@ -1,10 +1,11 @@
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { AppI18nValidationPipe } from './common/i18n/i18n-validation.pipe';
 import { getCorsConfig } from './config/cors.config';
 import { validateEnvironment } from './config/env.validation';
 
@@ -27,7 +28,7 @@ async function bootstrap() {
   }
 
   app.useGlobalPipes(
-    new ValidationPipe({
+    new AppI18nValidationPipe({
       whitelist: true,
       transform: true,
       forbidNonWhitelisted: true,

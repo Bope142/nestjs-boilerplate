@@ -1,8 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from '../src/app.module';
+import { AllExceptionsFilter } from '../src/common/filters/all-exceptions.filter';
+import { AppI18nValidationPipe } from '../src/common/i18n/i18n-validation.pipe';
 import { EMAIL_SENDER } from '../src/integrations/email/email-sender.port';
 import { InMemoryEmailSender } from '../src/integrations/email/in-memory-email.sender';
 import { validateEnvironment } from '../src/config/env.validation';
@@ -46,8 +48,9 @@ describe('Reminders (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalFilters(new AllExceptionsFilter());
     app.useGlobalPipes(
-      new ValidationPipe({
+      new AppI18nValidationPipe({
         whitelist: true,
         transform: true,
         forbidNonWhitelisted: true,

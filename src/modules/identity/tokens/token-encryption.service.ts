@@ -4,8 +4,10 @@ import {
   createDecipheriv,
   randomBytes,
 } from 'crypto';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { DomainError } from '../../../common/exceptions/domain.error';
 import { getAuthConfig } from '../../../config/auth.config';
+import { AuthErrorCodes } from '../errors/auth.errors';
 
 @Injectable()
 export class TokenEncryptionService {
@@ -41,10 +43,10 @@ export class TokenEncryptionService {
       ]);
       return decrypted.toString('utf8');
     } catch {
-      throw new UnauthorizedException({
-        code: 'INVALID_TOKEN_ENVELOPE',
-        message: 'Enveloppe de jeton invalide ou corrompue',
-      });
+      throw new DomainError(
+        AuthErrorCodes.INVALID_TOKEN_ENVELOPE,
+        HttpStatus.UNAUTHORIZED,
+      );
     }
   }
 

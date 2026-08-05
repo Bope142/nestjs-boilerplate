@@ -1,0 +1,9 @@
+{
+  "EMAIL_ALREADY_VERIFIED": "Email address is already verified.",
+  "EMAIL_VERIFICATION_ALREADY_SENT": "A valid verification code has already been sent. Check your email inbox.",
+  "EMAIL_VERIFICATION_SENT": "A new verification code has been sent.",
+  "MAGIC_LINK_SENT": "If an account exists for this email, a magic link has been sent.",
+  "PASSWORD_RESET_SENT": "If an account exists for this email, a reset link has been sent.",
+  "PASSWORD_RESET": "Password has been reset. Please sign in again.",
+  "PASSWORD_CHANGED": "Password changed. All sessions were revoked; please sign in."
+}

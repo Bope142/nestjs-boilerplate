@@ -1,43 +1,58 @@
-import {
-  ConflictException,
-  ForbiddenException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
+import { DomainError } from '../../../common/exceptions/domain.error';
+
+export const AuthErrorCodes = {
+  INVALID_CREDENTIALS: 'AUTH_INVALID_CREDENTIALS',
+  EMAIL_NOT_VERIFIED: 'AUTH_EMAIL_NOT_VERIFIED',
+  EMAIL_ALREADY_REGISTERED: 'AUTH_EMAIL_ALREADY_REGISTERED',
+  INVALID_OR_EXPIRED_TOKEN: 'AUTH_INVALID_OR_EXPIRED_TOKEN',
+  INVALID_OR_EXPIRED_RESET_TOKEN: 'AUTH_INVALID_OR_EXPIRED_RESET_TOKEN',
+  INVALID_MAGIC_LINK_TOKEN: 'AUTH_INVALID_MAGIC_LINK_TOKEN',
+  INVALID_EMAIL_VERIFICATION_TOKEN: 'AUTH_INVALID_EMAIL_VERIFICATION_TOKEN',
+  INVALID_REFRESH_TOKEN: 'AUTH_INVALID_REFRESH_TOKEN',
+  INVALID_ACCESS_TOKEN: 'AUTH_INVALID_ACCESS_TOKEN',
+  USER_INACTIVE: 'AUTH_USER_INACTIVE',
+  SESSION_INVALID: 'AUTH_SESSION_INVALID',
+  INVALID_TOKEN_ENVELOPE: 'AUTH_INVALID_TOKEN_ENVELOPE',
+  INVALID_GOOGLE_TOKEN: 'AUTH_INVALID_GOOGLE_TOKEN',
+  PASSWORD_CHANGE_UNAVAILABLE: 'AUTH_PASSWORD_CHANGE_UNAVAILABLE',
+  UNAUTHORIZED: 'AUTH_UNAUTHORIZED',
+  INSUFFICIENT_ROLE: 'AUTH_INSUFFICIENT_ROLE',
+} as const;
+
+export type AuthErrorCode =
+  (typeof AuthErrorCodes)[keyof typeof AuthErrorCodes];
 
 export function invalidCredentials(): never {
-  throw new UnauthorizedException({
-    code: 'INVALID_CREDENTIALS',
-    message: 'Email ou mot de passe incorrect',
-  });
+  throw new DomainError(
+    AuthErrorCodes.INVALID_CREDENTIALS,
+    HttpStatus.UNAUTHORIZED,
+  );
 }
 
 export function emailNotVerified(): never {
-  throw new ForbiddenException({
-    code: 'EMAIL_NOT_VERIFIED',
-    message:
-      "L'adresse e-mail doit être vérifiée pour accéder à cette ressource",
-  });
+  throw new DomainError(
+    AuthErrorCodes.EMAIL_NOT_VERIFIED,
+    HttpStatus.FORBIDDEN,
+  );
 }
 
 export function emailAlreadyRegistered(): never {
-  throw new ConflictException({
-    code: 'EMAIL_ALREADY_REGISTERED',
-    message: 'Un compte avec cet e-mail existe déjà',
-  });
+  throw new DomainError(
+    AuthErrorCodes.EMAIL_ALREADY_REGISTERED,
+    HttpStatus.CONFLICT,
+  );
 }
 
 export function invalidOrExpiredToken(
-  code = 'INVALID_OR_EXPIRED_TOKEN',
+  code: AuthErrorCode = AuthErrorCodes.INVALID_OR_EXPIRED_TOKEN,
 ): never {
-  throw new UnauthorizedException({
-    code,
-    message: 'Jeton invalide ou expiré',
-  });
+  throw new DomainError(code, HttpStatus.UNAUTHORIZED);
 }
 
 export function invalidRefreshToken(): never {
-  throw new UnauthorizedException({
-    code: 'INVALID_REFRESH_TOKEN',
-    message: 'Jeton de rafraîchissement invalide ou expiré',
-  });
+  throw new DomainError(
+    AuthErrorCodes.INVALID_REFRESH_TOKEN,
+    HttpStatus.UNAUTHORIZED,
+  );
 }

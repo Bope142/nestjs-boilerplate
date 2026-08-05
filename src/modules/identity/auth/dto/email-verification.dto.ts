@@ -1,25 +1,26 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString, Matches, MinLength } from 'class-validator';
+import { i18nValidationMessage } from 'nestjs-i18n';
 
 export class EmailVerificationDto {
   @ApiProperty({
-    description: 'Jeton opaque reçu par e-mail',
+    description: 'Opaque token received by email',
     required: false,
   })
   @IsOptional()
-  @IsString({ message: 'Le jeton est requis' })
-  @MinLength(20, { message: 'Le jeton est invalide' })
+  @IsString()
+  @MinLength(20)
   token?: string;
 
   @ApiProperty({
-    description: 'Code OTP numérique reçu par e-mail',
+    description: 'Numeric OTP received by email',
     example: '123456',
     required: false,
   })
   @IsOptional()
-  @IsString({ message: 'Le code OTP est requis' })
+  @IsString()
   @Matches(/^\d{6}$/, {
-    message: 'Le code OTP doit contenir exactement 6 chiffres',
+    message: i18nValidationMessage('validation.otpCode'),
   })
   otpCode?: string;
 }

@@ -10,6 +10,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { i18nValidationMessage } from 'nestjs-i18n';
 import {
   USER_ROLES,
   USER_STATUSES,
@@ -23,20 +24,20 @@ import type { CreateUserPayload } from './user.payload';
  */
 export class CreateUserDto implements CreateUserPayload {
   @ApiProperty({ example: 'membre@example.com' })
-  @IsEmail({}, { message: 'L’e-mail doit être une adresse valide' })
-  @MaxLength(320, { message: 'L’e-mail ne peut pas dépasser 320 caractères' })
+  @IsEmail()
+  @MaxLength(320)
   email!: CreateUserPayload['email'];
 
   @ApiProperty({ example: 'Jean' })
-  @IsString({ message: 'Le prénom est requis' })
-  @MinLength(1, { message: 'Le prénom est requis' })
-  @MaxLength(100, { message: 'Le prénom ne peut pas dépasser 100 caractères' })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(100)
   firstName!: CreateUserPayload['firstName'];
 
   @ApiProperty({ example: 'Mbala' })
-  @IsString({ message: 'Le nom est requis' })
-  @MinLength(1, { message: 'Le nom est requis' })
-  @MaxLength(100, { message: 'Le nom ne peut pas dépasser 100 caractères' })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(100)
   lastName!: CreateUserPayload['lastName'];
 
   @ApiPropertyOptional()
@@ -56,20 +57,20 @@ export class CreateUserDto implements CreateUserPayload {
   @IsString()
   @MaxLength(32)
   @Matches(/^\+?[0-9\s\-()]+$/, {
-    message: 'Le numéro de téléphone doit être valide',
+    message: i18nValidationMessage('validation.phoneNumber'),
   })
   phone?: CreateUserPayload['phone'];
 
   @ApiProperty({ enum: USER_TYPES })
-  @IsIn(USER_TYPES, { message: 'Le type utilisateur est invalide' })
+  @IsIn(USER_TYPES)
   userType!: CreateUserPayload['userType'];
 
   @ApiProperty({ enum: USER_ROLES })
-  @IsIn(USER_ROLES, { message: 'Le rôle est invalide' })
+  @IsIn(USER_ROLES)
   role!: CreateUserPayload['role'];
 
   @ApiProperty({ enum: USER_STATUSES })
-  @IsIn(USER_STATUSES, { message: 'Le statut est invalide' })
+  @IsIn(USER_STATUSES)
   status!: CreateUserPayload['status'];
 
   @ApiPropertyOptional()

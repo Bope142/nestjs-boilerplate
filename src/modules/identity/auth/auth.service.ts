@@ -1,16 +1,14 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import { randomInt, randomUUID } from 'crypto';
 import { AuditService } from '../../../common/audit/audit.service';
+import { DomainError } from '../../../common/exceptions/domain.error';
+import { translateSuccess } from '../../../common/i18n/translate.helpers';
 import type { AuthenticatedActor } from '../../../common/types/authenticated-actor';
 import { getAuthConfig } from '../../../config/auth.config';
 import { DRIZZLE } from '../../../database/drizzle.provider';
 import type { DrizzleDB } from '../../../database/types/drizzle';
 import {
+  AuthErrorCodes,
   emailAlreadyRegistered,
   invalidCredentials,
   invalidOrExpiredToken,
@@ -192,7 +190,7 @@ export class AuthService {
         targetType: 'email_verification_token',
         metadata: { reason: 'INVALID_OR_EXPIRED_TOKEN' },
       });
-      invalidOrExpiredToken('INVALID_EMAIL_VERIFICATION_TOKEN');
+      invalidOrExpiredToken(AuthErrorCodes.INVALID_EMAIL_VERIFICATION_TOKEN);
     }
 
     const token: EmailVerificationTokenRow = pending;
@@ -209,7 +207,7 @@ export class AuthService {
         tx,
       );
       if (!updated) {
-        invalidOrExpiredToken('INVALID_EMAIL_VERIFICATION_TOKEN');
+        invalidOrExpiredToken(AuthErrorCodes.INVALID_EMAIL_VERIFICATION_TOKEN);
       }
 
       await this.auditService.success(
@@ -247,7 +245,7 @@ export class AuthService {
     }
 
     if (user.email_verified_at) {
-      return { message: "L'adresse e-mail est déjà vérifiée." };
+      return { message: translateSuccess('EMAIL_ALREADY_VERIFIED') };
     }
 
     const now = new Date();
@@ -258,8 +256,7 @@ export class AuthService {
       );
     if (existing) {
       return {
-        message:
-          'Un code de vérification valide a déjà été envoyé. Vérifiez votre boîte e-mail.',
+        message: translateSuccess('EMAIL_VERIFICATION_ALREADY_SENT'),
       };
     }
 
@@ -315,7 +312,7 @@ export class AuthService {
     }
 
     return {
-      message: 'Un nouveau code de vérification a été envoyé.',
+      message: translateSuccess('EMAIL_VERIFICATION_SENT'),
     };
   }
 
@@ -487,8 +484,7 @@ export class AuthService {
 
   async requestMagicLink(email: string): Promise<{ message: string }> {
     const neutral = {
-      message:
-        'Si un compte existe pour cet e-mail, un lien magique a été envoyé.',
+      message: translateSuccess('MAGIC_LINK_SENT'),
     };
     const normalized = email.trim().toLowerCase();
     const user = await this.usersRepository.findByEmail(normalized);
@@ -567,14 +563,14 @@ export class AuthService {
         ipAddress: meta.ipAddress,
         metadata: { reason: 'INVALID_OR_EXPIRED_TOKEN' },
       });
-      invalidOrExpiredToken('INVALID_MAGIC_LINK_TOKEN');
+      invalidOrExpiredToken(AuthErrorCodes.INVALID_MAGIC_LINK_TOKEN);
     }
 
     const user = await this.db.transaction(async (tx) => {
       await this.magicLinkTokensRepository.markUsed(pending.id, now, tx);
       let found = await this.usersRepository.findById(pending.user_id, tx);
       if (!found || found.status !== 'ACTIVE') {
-        invalidOrExpiredToken('INVALID_MAGIC_LINK_TOKEN');
+        invalidOrExpiredToken(AuthErrorCodes.INVALID_MAGIC_LINK_TOKEN);
       }
 
       if (!found.email_verified_at) {
@@ -779,8 +775,7 @@ export class AuthService {
   async requestPasswordReset(email: string): Promise<{ message: string }> {
     const normalized = email.trim().toLowerCase();
     const user = await this.usersRepository.findByEmail(normalized);
-    const message =
-      'If an account exists for this email, a reset link has been sent.';
+    const message = translateSuccess('PASSWORD_RESET_SENT');
 
     if (!user) {
       return { message };
@@ -847,7 +842,7 @@ export class AuthService {
     const row =
       await this.passwordResetTokensRepository.findUnusedByHash(tokenHash);
     if (!row || row.expires_at.getTime() <= Date.now()) {
-      invalidOrExpiredToken('INVALID_OR_EXPIRED_RESET_TOKEN');
+      invalidOrExpiredToken(AuthErrorCodes.INVALID_OR_EXPIRED_RESET_TOKEN);
     }
 
     const identity = await this.identitiesRepository.findByUserAndProvider(
@@ -855,7 +850,7 @@ export class AuthService {
       'CREDENTIALS',
     );
     if (!identity) {
-      invalidOrExpiredToken('INVALID_OR_EXPIRED_RESET_TOKEN');
+      invalidOrExpiredToken(AuthErrorCodes.INVALID_OR_EXPIRED_RESET_TOKEN);
     }
 
     const passwordHash = await this.passwordService.hash(newPassword);
@@ -885,7 +880,7 @@ export class AuthService {
       );
     });
 
-    return { message: 'Password has been reset. Please sign in again.' };
+    return { message: translateSuccess('PASSWORD_RESET') };
   }
 
   async changePassword(
@@ -898,10 +893,10 @@ export class AuthService {
       'CREDENTIALS',
     );
     if (!identity?.password_hash) {
-      throw new BadRequestException({
-        code: 'PASSWORD_CHANGE_UNAVAILABLE',
-        message: 'Password change is not available for this account',
-      });
+      throw new DomainError(
+        AuthErrorCodes.PASSWORD_CHANGE_UNAVAILABLE,
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const valid = await this.passwordService.verify(
@@ -938,7 +933,7 @@ export class AuthService {
     });
 
     return {
-      message: 'Password changed. All sessions were revoked; please sign in.',
+      message: translateSuccess('PASSWORD_CHANGED'),
     };
   }
 

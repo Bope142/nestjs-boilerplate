@@ -11,6 +11,7 @@ import {
   Matches,
   MaxLength,
 } from 'class-validator';
+import { i18nValidationMessage } from 'nestjs-i18n';
 import {
   NOTIFICATION_CHANNELS,
   type NotificationChannel,
@@ -45,7 +46,7 @@ export class UpdateNotificationPreferencesDto {
   })
   @IsOptional()
   @Matches(LOCAL_TIME_PATTERN, {
-    message: 'quietHoursStart doit être au format HH:mm',
+    message: i18nValidationMessage('validation.timeSlotHhMm'),
   })
   quietHoursStart?: string | null;
 
@@ -55,7 +56,7 @@ export class UpdateNotificationPreferencesDto {
   })
   @IsOptional()
   @Matches(LOCAL_TIME_PATTERN, {
-    message: 'quietHoursEnd doit être au format HH:mm',
+    message: i18nValidationMessage('validation.timeSlotHhMm'),
   })
   quietHoursEnd?: string | null;
 }

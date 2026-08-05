@@ -1,12 +1,9 @@
-import {
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { ExecutionContext, HttpStatus, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
+import { AuthErrorCodes } from '../../modules/identity/errors/auth.errors';
+import { DomainError } from '../exceptions/domain.error';
 import { ALLOW_UNVERIFIED_EMAIL_KEY } from '../decorators/allow-unverified-email.decorator';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import type { AuthenticatedActor } from '../types/authenticated-actor';
@@ -44,18 +41,17 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const request = context.switchToHttp().getRequest<RequestWithActor>();
     const actor = request.user;
     if (!actor) {
-      throw new UnauthorizedException({
-        code: 'UNAUTHORIZED',
-        message: 'Authentification requise',
-      });
+      throw new DomainError(
+        AuthErrorCodes.UNAUTHORIZED,
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     if (!actor.emailVerified) {
-      throw new ForbiddenException({
-        code: 'EMAIL_NOT_VERIFIED',
-        message:
-          "L'adresse e-mail doit être vérifiée pour accéder à cette ressource",
-      });
+      throw new DomainError(
+        AuthErrorCodes.EMAIL_NOT_VERIFIED,
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     return true;

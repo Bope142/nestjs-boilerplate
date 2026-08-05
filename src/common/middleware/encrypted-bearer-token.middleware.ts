@@ -1,9 +1,7 @@
-import {
-  Injectable,
-  NestMiddleware,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { HttpStatus, Injectable, NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
+import { DomainError } from '../exceptions/domain.error';
+import { AuthErrorCodes } from '../../modules/identity/errors/auth.errors';
 import { TokenEncryptionService } from '../../modules/identity/tokens/token-encryption.service';
 
 export const RAW_ACCESS_TOKEN_KEY = 'rawAccessToken';
@@ -35,10 +33,10 @@ export class EncryptedBearerTokenMiddleware implements NestMiddleware {
       req.headers.authorization = `Bearer ${rawJwt}`;
       next();
     } catch {
-      throw new UnauthorizedException({
-        code: 'INVALID_TOKEN_ENVELOPE',
-        message: "Jeton d'accès invalide ou corrompu",
-      });
+      throw new DomainError(
+        AuthErrorCodes.INVALID_TOKEN_ENVELOPE,
+        HttpStatus.UNAUTHORIZED,
+      );
     }
   }
 }

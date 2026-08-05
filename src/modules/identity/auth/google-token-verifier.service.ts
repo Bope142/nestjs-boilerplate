@@ -1,6 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { OAuth2Client } from 'google-auth-library';
+import { DomainError } from '../../../common/exceptions/domain.error';
 import { getAuthConfig } from '../../../config/auth.config';
+import { AuthErrorCodes } from '../errors/auth.errors';
 
 export type VerifiedGoogleProfile = {
   subject: string;
@@ -38,10 +40,10 @@ export class GoogleTokenVerifierService {
         avatarUrl: payload.picture ?? null,
       };
     } catch {
-      throw new UnauthorizedException({
-        code: 'INVALID_GOOGLE_TOKEN',
-        message: "Jeton d'identité Google invalide",
-      });
+      throw new DomainError(
+        AuthErrorCodes.INVALID_GOOGLE_TOKEN,
+        HttpStatus.UNAUTHORIZED,
+      );
     }
   }
 }

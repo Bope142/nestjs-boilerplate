@@ -1,11 +1,8 @@
-import {
-  ExecutionContext,
-  ForbiddenException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { DomainError } from '../exceptions/domain.error';
 import type { AuthenticatedActor } from '../types/authenticated-actor';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
 describe('JwtAuthGuard', () => {
   const reflector = {
@@ -59,7 +56,7 @@ describe('JwtAuthGuard', () => {
   it('rejects an unverified authenticated user', async () => {
     await expect(
       guard.canActivate(createContext(unverifiedActor)),
-    ).rejects.toBeInstanceOf(ForbiddenException);
+    ).rejects.toBeInstanceOf(DomainError);
   });
 
   it('allows unverified users on allowlisted routes', async () => {
@@ -71,7 +68,7 @@ describe('JwtAuthGuard', () => {
 
   it('rejects when actor is missing after JWT activation', async () => {
     await expect(guard.canActivate(createContext())).rejects.toBeInstanceOf(
-      UnauthorizedException,
+      DomainError,
     );
   });
 });

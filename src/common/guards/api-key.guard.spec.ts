@@ -1,4 +1,4 @@
-import { UnauthorizedException } from '@nestjs/common';
+import { DomainError } from '../exceptions/domain.error';
 import { ApiKeyGuard } from './api-key.guard';
 
 describe('ApiKeyGuard', () => {
@@ -38,11 +38,9 @@ describe('ApiKeyGuard', () => {
 
   it('rejects a missing or invalid API key', () => {
     const guard = new ApiKeyGuard();
-    expect(() => guard.canActivate(createContext())).toThrow(
-      UnauthorizedException,
-    );
+    expect(() => guard.canActivate(createContext())).toThrow(DomainError);
     expect(() => guard.canActivate(createContext('wrong'))).toThrow(
-      UnauthorizedException,
+      DomainError,
     );
   });
 });

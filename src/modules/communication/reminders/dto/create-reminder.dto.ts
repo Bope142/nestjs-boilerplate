@@ -20,6 +20,7 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+import { i18nValidationMessage } from 'nestjs-i18n';
 import {
   NOTIFICATION_CHANNELS,
   REMINDER_RESOURCE_TYPES,
@@ -92,7 +93,7 @@ export class CreateReminderDto {
   @IsString({ each: true })
   @Matches(LOCAL_TIME_PATTERN, {
     each: true,
-    message: 'Chaque créneau doit être au format HH:mm',
+    message: i18nValidationMessage('validation.timeSlotHhMm'),
   })
   timeSlots!: string[];
 

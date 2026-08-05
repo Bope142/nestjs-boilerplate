@@ -1,0 +1,10 @@
+{
+  "REMINDER_NOT_FOUND": "Reminder not found.",
+  "REMINDER_FORBIDDEN": "You are not allowed to access this reminder.",
+  "REMINDER_MAX_ACTIVE_REACHED": "Maximum number of active reminders reached for this user.",
+  "REMINDER_MAX_SLOTS_EXCEEDED": "Maximum number of time slots exceeded.",
+  "REMINDER_MAX_CHANNELS_EXCEEDED": "Maximum number of channels exceeded.",
+  "REMINDER_INVALID_SCHEDULE": "Invalid reminder schedule configuration.",
+  "REMINDER_INVALID_OWNER": "A reminder must belong to either a user or a guest email.",
+  "REMINDER_INVALID_STATUS_TRANSITION": "Reminder status transition is not allowed."
+}

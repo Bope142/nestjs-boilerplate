@@ -1,0 +1,5 @@
+{
+  "COMMON_INVALID_API_KEY": "Clé d'accès API invalide ou manquante.",
+  "UNAUTHORIZED": "Authentification requise.",
+  "FORBIDDEN": "Accès interdit."
+}

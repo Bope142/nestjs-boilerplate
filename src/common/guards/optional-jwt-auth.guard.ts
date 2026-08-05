@@ -1,11 +1,9 @@
-import {
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
+import { ExecutionContext, HttpStatus, Injectable } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import type { Request } from 'express';
+import { DomainError } from '../exceptions/domain.error';
 import type { AuthenticatedActor } from '../types/authenticated-actor';
+import { AuthErrorCodes } from '../../modules/identity/errors/auth.errors';
 
 type RequestWithActor = Request & { user?: AuthenticatedActor };
 
@@ -29,11 +27,10 @@ export class OptionalJwtAuthGuard extends AuthGuard('jwt') {
 
     const actor = request.user;
     if (actor && !actor.emailVerified) {
-      throw new ForbiddenException({
-        code: 'EMAIL_NOT_VERIFIED',
-        message:
-          "L'adresse e-mail doit être vérifiée pour accéder à cette ressource",
-      });
+      throw new DomainError(
+        AuthErrorCodes.EMAIL_NOT_VERIFIED,
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     return true;

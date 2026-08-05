@@ -10,6 +10,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { i18nValidationMessage } from 'nestjs-i18n';
 import {
   USER_ROLES,
   USER_STATUSES,
@@ -24,7 +25,7 @@ import type { UpdateUserPayload } from './user.payload';
 export class UpdateUserDto implements UpdateUserPayload {
   @ApiPropertyOptional()
   @IsOptional()
-  @IsEmail({}, { message: 'L’e-mail doit être une adresse valide' })
+  @IsEmail()
   @MaxLength(320)
   email?: UpdateUserPayload['email'];
 
@@ -58,7 +59,9 @@ export class UpdateUserDto implements UpdateUserPayload {
   @IsOptional()
   @IsString()
   @MaxLength(32)
-  @Matches(/^\+?[0-9\s\-()]+$/)
+  @Matches(/^\+?[0-9\s\-()]+$/, {
+    message: i18nValidationMessage('validation.phoneNumber'),
+  })
   phone?: UpdateUserPayload['phone'];
 
   @ApiPropertyOptional({ enum: USER_TYPES })

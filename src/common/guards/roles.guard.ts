@@ -1,14 +1,16 @@
 import {
   CanActivate,
   ExecutionContext,
-  ForbiddenException,
+  HttpStatus,
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import type { UserRole } from '../../database/schema/enums';
+import { DomainError } from '../exceptions/domain.error';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import type { AuthenticatedActor } from '../types/authenticated-actor';
+import { AuthErrorCodes } from '../../modules/identity/errors/auth.errors';
 
 type RequestWithActor = Request & { user?: AuthenticatedActor };
 
@@ -30,10 +32,10 @@ export class RolesGuard implements CanActivate {
     const actor = request.user;
 
     if (!actor || !requiredRoles.includes(actor.role)) {
-      throw new ForbiddenException({
-        code: 'INSUFFICIENT_ROLE',
-        message: "Vous n'avez pas la permission d'effectuer cette action",
-      });
+      throw new DomainError(
+        AuthErrorCodes.INSUFFICIENT_ROLE,
+        HttpStatus.FORBIDDEN,
+      );
     }
 
     return true;

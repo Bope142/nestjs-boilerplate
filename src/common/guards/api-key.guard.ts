@@ -1,11 +1,16 @@
 import {
   CanActivate,
   ExecutionContext,
+  HttpStatus,
   Injectable,
-  UnauthorizedException,
 } from '@nestjs/common';
 import type { Request } from 'express';
 import { getAuthConfig } from '../../config/auth.config';
+import { DomainError } from '../exceptions/domain.error';
+
+export const CommonErrorCodes = {
+  INVALID_API_KEY: 'COMMON_INVALID_API_KEY',
+} as const;
 
 @Injectable()
 export class ApiKeyGuard implements CanActivate {
@@ -15,10 +20,10 @@ export class ApiKeyGuard implements CanActivate {
     const expected = getAuthConfig().apiAccessKey;
 
     if (!apiKey || apiKey !== expected) {
-      throw new UnauthorizedException({
-        code: 'INVALID_API_KEY',
-        message: "Clé d'accès API invalide ou manquante",
-      });
+      throw new DomainError(
+        CommonErrorCodes.INVALID_API_KEY,
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     return true;

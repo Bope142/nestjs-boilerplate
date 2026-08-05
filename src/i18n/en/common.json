@@ -1,0 +1,4 @@
+{
+  "INTERNAL_SERVER_ERROR": "An internal server error occurred.",
+  "VALIDATION_ERROR": "The provided data is invalid."
+}

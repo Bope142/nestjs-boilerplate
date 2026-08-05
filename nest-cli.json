@@ -8,6 +8,10 @@
       {
         "include": "integrations/email/templates/**/*",
         "watchAssets": true
+      },
+      {
+        "include": "i18n/**/*",
+        "watchAssets": true
       }
     ]
   }
