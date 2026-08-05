@@ -1,5 +1,6 @@
-import { UnauthorizedException } from '@nestjs/common';
+import { DomainError } from '../../../common/exceptions/domain.error';
 import { GoogleTokenVerifierService } from './google-token-verifier.service';
+import { AuthErrorCodes } from '../errors/auth.errors';
 
 describe('GoogleTokenVerifierService', () => {
   beforeAll(() => {
@@ -18,6 +19,11 @@ describe('GoogleTokenVerifierService', () => {
     const service = new GoogleTokenVerifierService();
     await expect(
       service.verifyIdToken('not-a-real-token'),
-    ).rejects.toBeInstanceOf(UnauthorizedException);
+    ).rejects.toBeInstanceOf(DomainError);
+    await expect(
+      service.verifyIdToken('not-a-real-token'),
+    ).rejects.toMatchObject({
+      code: AuthErrorCodes.INVALID_GOOGLE_TOKEN,
+    });
   });
 });
