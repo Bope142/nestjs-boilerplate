@@ -16,6 +16,10 @@ Interactive OpenAPI docs are served at `/api/docs` when the app is running.
 
 ## Contributing
 
-- Use Conventional Commits (`feat:`, `fix:`, `docs:`, etc.).
+Contributions welcome. See the [main README](../README.md#contributing) for the full workflow. In short:
+
+- Fork, branch from `main`, and open a focused pull request.
+- Use [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, etc.).
 - Run `pnpm lint` before pushing (also enforced by hooks).
+- Add tests and update docs/Swagger when behavior or API contracts change.
 - CI runs lint, typecheck, test, and build on PRs to `main`.

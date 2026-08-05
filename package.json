@@ -2,10 +2,10 @@
   "name": "nestjs-boilerplate",
   "version": "0.1.0",
   "description": "Production-ready NestJS boilerplate with auth, Drizzle, Redis, and email",
-  "author": "",
+  "author": "Norbert Yemuang",
   "private": true,
   "packageManager": "pnpm@10.1.0",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "engines": {
     "node": ">=22.0.0",
     "pnpm": ">=10.1.0"

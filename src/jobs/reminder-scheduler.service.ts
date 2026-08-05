@@ -4,6 +4,7 @@ import { Queue } from 'bullmq';
 import { getJobsConfig } from '../config/jobs.config';
 import { computeNextRunAt } from '../modules/communication/reminders/reminder-schedule';
 import { RemindersRepository } from '../modules/communication/reminders/reminders.repository';
+import { reminderDispatchJobId } from './job-id.util';
 import {
   JOB_REMINDER_DISPATCH,
   JOB_REMINDER_SCHEDULER_TICK,
@@ -61,7 +62,7 @@ export class ReminderSchedulerService implements OnModuleInit {
 
       const scheduledFor = reminder.next_run_at ?? now;
       const scheduledForIso = scheduledFor.toISOString();
-      const jobId = `dispatch:${reminder.id}:${scheduledForIso}`;
+      const jobId = reminderDispatchJobId(reminder.id, scheduledFor);
 
       await this.dispatchQueue.add(
         JOB_REMINDER_DISPATCH,

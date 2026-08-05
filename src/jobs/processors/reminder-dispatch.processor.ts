@@ -14,6 +14,7 @@ import { DeliveriesRepository } from '../../modules/communication/deliveries/del
 import { ReminderEligibilityRegistry } from '../../modules/communication/ports/reminder-eligibility.port';
 import { PreferencesRepository } from '../../modules/communication/preferences/preferences.repository';
 import { RemindersRepository } from '../../modules/communication/reminders/reminders.repository';
+import { notificationEmailJobId, notificationInAppJobId } from '../job-id.util';
 import {
   JOB_NOTIFICATION_EMAIL,
   JOB_NOTIFICATION_IN_APP,
@@ -137,7 +138,7 @@ export class ReminderDispatchProcessor extends WorkerHost {
           JOB_NOTIFICATION_EMAIL,
           { deliveryId: delivery.id },
           {
-            jobId: `email:${delivery.id}`,
+            jobId: notificationEmailJobId(delivery.id),
             attempts: jobs.jobAttempts,
             backoff: { type: 'exponential', delay: jobs.jobBackoffMs },
             removeOnComplete: 1000,
@@ -156,7 +157,7 @@ export class ReminderDispatchProcessor extends WorkerHost {
           JOB_NOTIFICATION_IN_APP,
           { deliveryId: delivery.id },
           {
-            jobId: `inapp:${delivery.id}`,
+            jobId: notificationInAppJobId(delivery.id),
             attempts: jobs.jobAttempts,
             backoff: { type: 'exponential', delay: jobs.jobBackoffMs },
             removeOnComplete: 1000,
