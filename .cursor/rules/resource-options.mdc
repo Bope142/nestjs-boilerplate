@@ -1,0 +1,35 @@
+---
+description: Resources used as pickers/selects must expose GET .../options
+globs:
+  - "src/**/*controller.ts"
+  - "src/**/dto/**/*.ts"
+alwaysApply: false
+---
+
+# Resource Options Endpoints
+
+When a resource is chosen from a **select / multi-select / picker** (not only a paginated admin table), expose a dedicated options route.
+
+## Required shape
+
+- Path: `GET …/options` on the same controller family as the resource (or a documented public twin).
+- Declare `@Get('options')` **before** `@Get(':id')` so Nest does not treat `options` as an id.
+- Response: compact DTO (`id` + display fields). No pagination unless the catalog is huge (prefer filter query then).
+- Only **active / non-deleted** rows.
+- `@CacheRoute({ namespace: '<resource>' })` — same namespace as list/detail; mutations already `@InvalidateCache` that namespace.
+- Swagger: `@ApiOkResponse({ type: [XxxOptionResponseDto] })` + description of who consumes it and which body field uses `id`.
+
+## Examples in this repo
+
+| Resource | Options path |
+|----------|----------------|
+| Cuisine types | `GET /api/cuisine-types/options` |
+| Merchant types | `GET /api/merchant-types/options` |
+| Supplements (merchant) | `GET /api/merchant/supplements/options` |
+| Supplements (admin) | `GET /api/admin/merchants/:merchantId/supplements/options` |
+
+## Anti-patterns
+
+- Forcing the UI to page through full CRUD lists just to fill a `<Select>`
+- Returning soft-deleted or inactive rows in options
+- Putting `@Get(':id')` above `@Get('options')`

@@ -27,6 +27,14 @@ POST   /api/auth/refresh
 PATCH  /api/users/:id
 ```
 
+## Gateway headers
+
+Most non-health routes require `x-api-key` (`ApiKeyGuard`).
+
+Typical authenticated stack: `ApiKeyGuard` → `JwtAuthGuard` → `RolesGuard` (when roles apply).
+
+Built-in roles: `SUPER_ADMIN` | `ADMIN` | `USER`.
+
 ## Status codes
 
 - `200 OK` — successful read/update with body.
@@ -87,10 +95,17 @@ Do not include stack traces or raw internal errors.
 - Serialize dates as ISO 8601.
 - Do not expose token hashes or internal secrets.
 - Do not accept server-managed fields from clients (`createdBy`, `status`, etc.).
+- For related users / merchants the UI must display: nest a compact ref (`{ id, name, … }`) instead of a bare UUID — see rule `api-entity-refs`.
 
 ## OpenAPI
 
 Document summary, auth, parameters, body, success response, common errors, and pagination. Swagger must match actual guards and validation.
+
+When adding or changing endpoints, DTOs, or response fields: update Swagger **and** Postman in the same change (see rule `update-api-docs`).
+
+## Response caching
+
+For resource GETs use `@CacheRoute({ namespace })`. For mutations that change that resource use `@InvalidateCache(namespace)` with the **same** namespace. See always-apply rule `http-response-cache`.
 
 ## Deprecation
 

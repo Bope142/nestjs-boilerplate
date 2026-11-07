@@ -31,10 +31,10 @@ pnpm init:project
 ## 3. Start infrastructure
 
 ```bash
-docker compose up -d
+pnpm docker:dev
 ```
 
-This starts PostgreSQL 16 (`localhost:5432`, database `app_dev`) and Redis 7 (`localhost:6379`).
+This starts PostgreSQL 16 (`localhost:5432`, database `app_dev`) and Redis 7 (`localhost:6379`). Ensure `.env` also defines a distinct `DATABASE_URL_TEST` (e.g. `app_test`).
 
 ## 4. Database
 
@@ -42,6 +42,7 @@ Apply the baseline migration and seed the super admin:
 
 ```bash
 pnpm db:migrate
+pnpm db:setup:test
 pnpm db:seed
 ```
 
@@ -50,7 +51,7 @@ Default seed credentials come from `.env` (`SUPER_ADMIN_EMAIL`, `SUPER_ADMIN_PAS
 ## 5. Run the API
 
 ```bash
-pnpm start:dev
+pnpm dev
 ```
 
 - API base: `http://localhost:3000/api`
@@ -62,7 +63,10 @@ pnpm start:dev
 pnpm lint
 pnpm typecheck
 pnpm test
+pnpm test:e2e
 pnpm build
+pnpm audit:security
+pnpm db:diagram:check
 ```
 
 ## Troubleshooting

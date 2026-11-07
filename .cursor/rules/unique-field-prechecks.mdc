@@ -1,0 +1,41 @@
+---
+description: Always pre-check DB unique fields and map 23505 to clear DomainErrors
+alwaysApply: true
+---
+
+# Unique Field Pre-checks
+
+Never rely on Postgres unique constraints alone to surface user-facing errors. Pre-check every unique column before insert/update, and map residual `23505` races to a specific `DomainError` (never a bare Drizzle stack or empty `errors[]`).
+
+## Pattern
+
+1. **List uniques** for the write path (schema `.unique()`, `uniqueIndex`, composite UQs).
+2. **Pre-check** with repository finders (`findByEmail`, `findByPhone`, …) **before** the mutating transaction.
+3. **Catch** insert/update failures with `isPgUniqueViolation` + `getPgUniqueConstraintName` from [`src/common/utils/pg-error.ts`](src/common/utils/pg-error.ts) — walk `error.cause` (Drizzle wraps PG errors).
+4. **Map constraint → DomainError** with a dedicated code (e.g. `AUTH_EMAIL_ALREADY_REGISTERED`, not a generic conflict).
+5. **i18n** fr/en under `src/i18n/*/errors/<module>.json`.
+6. **Async flows** (import confirm, jobs): set `failureCode` / `failureMessage` **and** populate `errors[]` with `field` + localized `message`. Do not leave `errors: []` + generic `*_FAILED`.
+
+## Known boilerplate uniques (examples)
+
+| Constraint | Pre-check | Error code |
+|---|---|---|
+| `users.email` | `UsersRepository.findByEmail` | auth email-already-registered equivalents |
+| `users.phone` (if present) | `UsersRepository.findByPhone` | auth phone conflict codes |
+
+Phone uniqueness includes soft-deleted rows if the unique index does — treat “exists” as conflict.
+
+## Anti-patterns
+
+- Validate email uniqueness but skip phone (or any other unique on the same insert)
+- Catch `23505` and always throw the email conflict code
+- Check only top-level `error.code` (misses Drizzle `cause`)
+- Async job fails with generic message and empty `errors[]`
+- Documenting only one of several unique conflict codes in API docs
+
+## Checklist for create / import / duplicate / register
+
+1. Every unique field on the insert has a pre-check.
+2. Catch path maps each relevant constraint name to the right DomainError.
+3. Client-facing response includes the specific code + localized message (+ row `errors[]` for imports).
+4. Swagger / `docs/*.md` / Postman list the new conflict codes.

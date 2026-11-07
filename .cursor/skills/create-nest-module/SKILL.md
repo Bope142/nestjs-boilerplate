@@ -35,9 +35,10 @@ If information is missing, make conservative assumptions and list them clearly.
 7. Define or update Drizzle schemas and indexes.
 8. Write tests for business behavior, authorization, and data integrity when applicable.
 9. Implement controller, service, repository, mapper, and policy as needed.
-10. Add Swagger documentation.
-11. Run formatting, linting, type checking, and relevant tests (`pnpm run lint` mandatory).
-12. Summarize changed files, commands run, assumptions, and residual risks.
+10. If the module exposes JWT routes: implement `NestModule.configure` and register every JWT controller in `EncryptedBearerTokenMiddleware` `.forRoutes(…)` (see rule/skill `encrypted-bearer-token`).
+11. Add Swagger documentation.
+12. Run formatting, linting, type checking, and relevant tests (`pnpm run lint` mandatory).
+13. Summarize changed files, commands run, assumptions, and residual risks.
 
 ## Required module qualities
 

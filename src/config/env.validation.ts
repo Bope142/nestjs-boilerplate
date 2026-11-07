@@ -9,6 +9,7 @@ export function validateEnvironment(): void {
   // Liste complète des variables obligatoires, incluant GOOGLE_CLIENT_ID
   const requiredVars = [
     'DATABASE_URL_DEV',
+    'DATABASE_URL_TEST',
     'DATABASE_URL_PROD',
     'JWT_SECRET',
     'REFRESH_JWT_SECRET',

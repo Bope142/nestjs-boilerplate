@@ -79,6 +79,8 @@ pnpm db:migrate
 
 Review for accidental drops, lock-heavy ops, non-null on populated tables, enum changes, and backfill needs.
 
+After adding, renaming, or dropping a column, update every `$inferSelect` / mapper-row object literal in `*.spec.ts` (see `sync-schema-typed-fixtures` skill). `pnpm typecheck` does not compile specs.
+
 ## Seeds
 
 Deterministic dev seeds only; never seed production with fake sensitive data.

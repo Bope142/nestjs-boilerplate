@@ -39,16 +39,48 @@ jobs:
 
     env:
       NODE_ENV: test
+      NODE_OPTIONS: --experimental-vm-modules
       DATABASE_URL_DEV: postgresql://postgres:postgres@localhost:5432/app_dev
-      DATABASE_URL_PROD: postgresql://postgres:postgres@localhost:5432/app_dev
+      DATABASE_URL_TEST: postgresql://postgres:postgres@localhost:5432/app_test
+      DATABASE_URL_PROD: postgresql://postgres:postgres@localhost:5432/app_prod
       JWT_SECRET: ci-jwt-secret-with-at-least-32-characters
       REFRESH_JWT_SECRET: ci-refresh-secret-with-at-least-32-chars
       TOKEN_ENCRYPTION_KEY: ci-token-encryption-key-32-chars-min
+      JWT_EXPIRES_IN: 15m
+      REFRESH_JWT_EXPIRES_IN: 7d
+      FRONTEND_BASE_URL: http://localhost:5173
+      PORT: 3000
+      EMAIL_RETRY_ATTEMPTS: 3
+      EMAIL_RETRY_DELAY: 1000
+      EMAIL_TIMEOUT: 10000
+      SESSION_CLEANUP_DAYS: 30
+      MAIL_HOST: smtp.example.com
+      MAIL_PORT: 587
+      MAIL_SECURE: 'false'
+      MAIL_USER: mailer@example.com
+      MAIL_PASSWORD: change-me
+      MAIL_FROM: no-reply@example.com
+      MAIL_FROM_NAME: App
       REDIS_HOST: localhost
       REDIS_PORT: 6379
-      REDIS_KEY_PREFIX: ci:
+      REDIS_KEY_PREFIX: 'ci:'
+      REDIS_TTL: 3600
       CACHE_ENABLED: 'false'
       JOBS_ENABLED: 'false'
+      THROTTLE_TTL_MS: 60000
+      THROTTLE_LIMIT: 100
+      CORS_ORIGINS: http://localhost:3000
+      CORS_ENABLED: 'true'
+      CORS_CREDENTIALS: 'true'
+      CORS_MAX_AGE: 86400
+      API_ACCESS_KEY: ci-api-access-key
+      WORLD_TIME_API_BASE_URL: https://worldtimeapi.org/api
+      GOOGLE_CLIENT_ID: ci-google-client-id
+      SUPER_ADMIN_EMAIL: admin@example.com
+      SUPER_ADMIN_PASSWORD: change-me-strong-password
+      SUPER_ADMIN_FIRST_NAME: Platform
+      SUPER_ADMIN_LAST_NAME: Admin
+      SWAGGER_ENABLED: 'false'
 
     steps:
       - name: Checkout
@@ -68,14 +100,33 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Create test database
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d postgres -c "CREATE DATABASE app_test;" || true
+
+      - name: Migrate test database
+        run: pnpm db:migrate:test
+
       - name: Lint
         run: pnpm lint
 
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Test
+      - name: Unit tests
         run: pnpm test
+
+      - name: E2E tests
+        run: pnpm test:e2e
+
+      - name: Draw.io diagram check
+        run: pnpm db:diagram:check
+
+      - name: Production dependency audit
+        run: pnpm audit --prod
 
       - name: Build
         run: pnpm build
+
+      - name: Docker build
+        run: docker build -t nestjs-boilerplate:ci .

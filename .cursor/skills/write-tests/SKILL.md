@@ -15,7 +15,7 @@ Use this skill when adding tests, fixing a regression, or reviewing insufficient
 4. Make actor roles/permissions explicit in setup.
 5. Freeze time when behavior is time-dependent.
 6. Cover success, failure, authorization, and conflict / retry paths.
-7. Use a real PostgreSQL database for persistence behavior.
+7. Use a real PostgreSQL database for persistence behavior — for e2e that means **`DATABASE_URL_TEST` only** (`pnpm test:e2e` / `pnpm db:migrate:test`). Never invent fixtures on `DATABASE_URL_DEV`. Follow skill `database-test-isolation`.
 8. Avoid real external network calls (mail, SMS, payment providers, storage).
 9. Run the narrow test first, then the wider relevant suite.
 10. Report exactly what ran.
@@ -72,9 +72,12 @@ Add tenant isolation tests only when the product implements multi-tenancy.
 - Avoid arbitrary sleeps.
 - Avoid order dependence.
 - Keep fixtures minimal.
+- Full row fixtures typed as `$inferSelect` / mapper rows must list **every** column. After a schema change, follow `sync-schema-typed-fixtures` — do not cast with `as RowType`.
 - Do not mock the database in repository integration tests.
 - Do not claim a command passed unless it was executed.
 - Always run `pnpm run lint` after related implementation changes.
+- ExcelJS / real `.xlsx` unit specs: follow skill `excel-heavy-unit-tests` (`jest.setTimeout(30_000)`, buffer writes, `try/finally` cleanup). Default 5s timeouts flake under full `pnpm test` / OneDrive and block push.
+- Open handles / fake timers / worker SIGTERM / flaky `libphonenumber-js` under full `pnpm test`: follow skill `jest-teardown-open-handles` (`afterEach` real timers, `pnpm test:detect-handles`, no `--forceExit` on default test).
 
 ## Output summary
 

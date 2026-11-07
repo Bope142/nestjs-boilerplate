@@ -1,0 +1,17 @@
+---
+description: After Drizzle column/table changes, update typed test fixtures; typecheck does not compile specs
+alwaysApply: true
+---
+
+# Schema-Typed Test Fixtures
+
+`$inferSelect` / mapper row types (`OrderDetailRow`, `OrderListRow`, …) include **every** table column. Adding, renaming, or removing a column breaks object literals in `*.spec.ts` and `test/*.ts` with `TS2322` (`Property '…' is missing`).
+
+## After any schema column change
+
+1. Follow `.cursor/skills/sync-schema-typed-fixtures/SKILL.md`.
+2. Grep specs and e2e for the table’s typed fixtures (`OrderDetailRow`, `.$inferSelect`, `as Order…`, `insert(orders).values`).
+3. Add / rename / remove the field on **every** full object literal. Do **not** hide it with `as Type`.
+4. Run `pnpm test` (or at least the affected specs). **`pnpm typecheck` is not enough**: `tsconfig.build.json` excludes `**/*spec.ts` and `test/`.
+
+Incident to prevent: `user_referral_reward_id` on `orders` left `orders.mapper.spec.ts` `baseDetail` incomplete → full `pnpm test` failed at compile, push blocked.

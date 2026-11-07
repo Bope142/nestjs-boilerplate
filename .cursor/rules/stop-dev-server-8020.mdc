@@ -1,0 +1,31 @@
+---
+description: After finishing a feature/fix, free port 8020 — the user starts the dev server themselves
+alwaysApply: true
+---
+
+# Stop Dev Server On Port 8020
+
+The developer owns `pnpm run dev`. The agent must **not** leave a Nest process listening on **8020**.
+
+## When
+
+After completing a feature, bug fix, refactor, or any work session that may have started/restarted the API (including watch mode / failed boot leaving a listener):
+
+1. Check whether something listens on port **8020**.
+2. If yes, **stop that process** before reporting the task done.
+3. Do **not** start or restart the server afterward — the user will run it.
+
+## How (Windows PowerShell)
+
+```powershell
+$conns = @(Get-NetTCPConnection -LocalPort 8020 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique)
+foreach ($procId in $conns) { Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue }
+```
+
+Confirm the port is free. Prefer a variable name other than `$pid` (read-only in PowerShell).
+
+## Anti-patterns
+
+- Leaving `pnpm run dev` running in the background after the task
+- Assuming a crash freed the port (`EADDRINUSE` means it did not)
+- Starting the server “to verify” and leaving it up

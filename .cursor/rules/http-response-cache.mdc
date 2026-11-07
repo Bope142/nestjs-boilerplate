@@ -1,0 +1,55 @@
+---
+description: HTTP response caching with CacheRoute / InvalidateCache — mandatory on read/write resource endpoints
+globs:
+  - "src/**/*controller.ts"
+alwaysApply: true
+---
+
+# HTTP Response Cache
+
+When adding or changing HTTP resources, wire the shared Redis response cache. Do not ship read endpoints without a cache namespace, or mutations without invalidation.
+
+## Decorators
+
+- `@CacheRoute({ namespace: '<resource>' })` on **GET** handlers that return resource data (list, detail, options, `me` reads).
+- `@InvalidateCache('<resource>')` on **POST / PATCH / PUT / DELETE** (and any other mutation) that changes data under that namespace.
+
+Implementations live in:
+
+- [`src/common/cache/decorators/cache-route.decorator.ts`](src/common/cache/decorators/cache-route.decorator.ts)
+- [`src/common/cache/decorators/invalidate-cache.decorator.ts`](src/common/cache/decorators/invalidate-cache.decorator.ts)
+
+Keys already include path, query, lang, and authenticated `userId` when present — user-scoped reads (e.g. `/merchant/me`) stay isolated.
+
+## Namespace rules
+
+- One stable kebab-case namespace per resource family (examples: `merchant-types`, `merchants`).
+- Reuse the **same** namespace string for every `@CacheRoute` and `@InvalidateCache` of that family.
+- Prefer a module-local constant (`const USERS_CACHE_NS = 'users'`).
+
+## When to apply
+
+| Handler | Required |
+|---|---|
+| GET list / detail / options / me (resource reads) | `@CacheRoute` |
+| POST / PATCH / PUT / DELETE that mutates that resource | `@InvalidateCache` |
+| Auth login/register, health, pure actions with no cached reads | omit (unless a related cached view must refresh) |
+
+## Invalidation
+
+- Any successful mutation must invalidate the namespace so lists, details, options, and `me` caches refresh.
+- Direct DB writes in seeds/tests bypass decorators — call `CacheService.bumpNamespace('<resource>')` when those tests assert cached GET freshness (see merchant-types e2e).
+
+## Anti-patterns
+
+- Caching GETs but forgetting `@InvalidateCache` on create/update/delete
+- Different namespace strings for the same resource on read vs write
+- Caching endpoints that must always be real-time without a clear product reason (document if intentionally uncached)
+- Relying on TTL alone instead of invalidation after writes
+
+## Checklist for new endpoints
+
+1. Choose / reuse the resource cache namespace.
+2. Add `@CacheRoute` on GETs that serve that resource.
+3. Add `@InvalidateCache` on every mutation of that resource.
+4. Cover list/detail freshness in e2e when cache matters.
