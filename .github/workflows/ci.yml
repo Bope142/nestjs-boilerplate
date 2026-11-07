@@ -13,12 +13,63 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    # Ephemeral per-run credentials for the job-local Postgres service.
+    # Not production secrets — avoids hardcoding password literals for secret scanners.
+    env:
+      NODE_ENV: test
+      NODE_OPTIONS: --experimental-vm-modules
+      CI_PG_USER: postgres
+      CI_PG_PASSWORD: ci-pg-${{ github.run_id }}-${{ github.run_attempt }}
+      CI_PG_HOST: localhost
+      CI_PG_PORT: 5432
+      DATABASE_URL_DEV: postgresql://postgres:ci-pg-${{ github.run_id }}-${{ github.run_attempt }}@localhost:5432/app_dev
+      DATABASE_URL_TEST: postgresql://postgres:ci-pg-${{ github.run_id }}-${{ github.run_attempt }}@localhost:5432/app_test
+      DATABASE_URL_PROD: postgresql://postgres:ci-pg-${{ github.run_id }}-${{ github.run_attempt }}@localhost:5432/app_prod
+      JWT_SECRET: ci-jwt-secret-${{ github.run_id }}-pad-to-32chars-min
+      REFRESH_JWT_SECRET: ci-refresh-secret-${{ github.run_id }}-pad-32chars
+      TOKEN_ENCRYPTION_KEY: ci-token-enc-${{ github.run_id }}-pad-to-32chars
+      JWT_EXPIRES_IN: 15m
+      REFRESH_JWT_EXPIRES_IN: 7d
+      FRONTEND_BASE_URL: http://localhost:5173
+      PORT: 3000
+      EMAIL_RETRY_ATTEMPTS: 3
+      EMAIL_RETRY_DELAY: 1000
+      EMAIL_TIMEOUT: 10000
+      SESSION_CLEANUP_DAYS: 30
+      MAIL_HOST: smtp.example.com
+      MAIL_PORT: 587
+      MAIL_SECURE: 'false'
+      MAIL_USER: mailer@example.com
+      MAIL_PASSWORD: ci-mail-${{ github.run_id }}
+      MAIL_FROM: no-reply@example.com
+      MAIL_FROM_NAME: App
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      REDIS_KEY_PREFIX: 'ci:'
+      REDIS_TTL: 3600
+      CACHE_ENABLED: 'false'
+      JOBS_ENABLED: 'false'
+      THROTTLE_TTL_MS: 60000
+      THROTTLE_LIMIT: 100
+      CORS_ORIGINS: http://localhost:3000
+      CORS_ENABLED: 'true'
+      CORS_CREDENTIALS: 'true'
+      CORS_MAX_AGE: 86400
+      API_ACCESS_KEY: ci-api-${{ github.run_id }}
+      WORLD_TIME_API_BASE_URL: https://worldtimeapi.org/api
+      GOOGLE_CLIENT_ID: ci-google-client-id
+      SUPER_ADMIN_EMAIL: admin@example.com
+      SUPER_ADMIN_PASSWORD: ci-admin-${{ github.run_id }}-Pass1
+      SUPER_ADMIN_FIRST_NAME: Platform
+      SUPER_ADMIN_LAST_NAME: Admin
+      SWAGGER_ENABLED: 'false'
+
     services:
       postgres:
         image: postgres:16
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: ci-pg-${{ github.run_id }}-${{ github.run_attempt }}
           POSTGRES_DB: app_dev
         ports:
           - 5432:5432
@@ -36,51 +87,6 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
-
-    env:
-      NODE_ENV: test
-      NODE_OPTIONS: --experimental-vm-modules
-      DATABASE_URL_DEV: postgresql://postgres:postgres@localhost:5432/app_dev
-      DATABASE_URL_TEST: postgresql://postgres:postgres@localhost:5432/app_test
-      DATABASE_URL_PROD: postgresql://postgres:postgres@localhost:5432/app_prod
-      JWT_SECRET: ci-jwt-secret-with-at-least-32-characters
-      REFRESH_JWT_SECRET: ci-refresh-secret-with-at-least-32-chars
-      TOKEN_ENCRYPTION_KEY: ci-token-encryption-key-32-chars-min
-      JWT_EXPIRES_IN: 15m
-      REFRESH_JWT_EXPIRES_IN: 7d
-      FRONTEND_BASE_URL: http://localhost:5173
-      PORT: 3000
-      EMAIL_RETRY_ATTEMPTS: 3
-      EMAIL_RETRY_DELAY: 1000
-      EMAIL_TIMEOUT: 10000
-      SESSION_CLEANUP_DAYS: 30
-      MAIL_HOST: smtp.example.com
-      MAIL_PORT: 587
-      MAIL_SECURE: 'false'
-      MAIL_USER: mailer@example.com
-      MAIL_PASSWORD: change-me
-      MAIL_FROM: no-reply@example.com
-      MAIL_FROM_NAME: App
-      REDIS_HOST: localhost
-      REDIS_PORT: 6379
-      REDIS_KEY_PREFIX: 'ci:'
-      REDIS_TTL: 3600
-      CACHE_ENABLED: 'false'
-      JOBS_ENABLED: 'false'
-      THROTTLE_TTL_MS: 60000
-      THROTTLE_LIMIT: 100
-      CORS_ORIGINS: http://localhost:3000
-      CORS_ENABLED: 'true'
-      CORS_CREDENTIALS: 'true'
-      CORS_MAX_AGE: 86400
-      API_ACCESS_KEY: ci-api-access-key
-      WORLD_TIME_API_BASE_URL: https://worldtimeapi.org/api
-      GOOGLE_CLIENT_ID: ci-google-client-id
-      SUPER_ADMIN_EMAIL: admin@example.com
-      SUPER_ADMIN_PASSWORD: change-me-strong-password
-      SUPER_ADMIN_FIRST_NAME: Platform
-      SUPER_ADMIN_LAST_NAME: Admin
-      SWAGGER_ENABLED: 'false'
 
     steps:
       - name: Checkout
@@ -102,7 +108,7 @@ jobs:
 
       - name: Create test database
         run: |
-          PGPASSWORD=postgres psql -h localhost -U postgres -d postgres -c "CREATE DATABASE app_test;" || true
+          PGPASSWORD="$CI_PG_PASSWORD" psql -h "$CI_PG_HOST" -U "$CI_PG_USER" -d postgres -c "CREATE DATABASE app_test;" || true
 
       - name: Migrate test database
         run: pnpm db:migrate:test
