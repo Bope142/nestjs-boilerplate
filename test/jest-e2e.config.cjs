@@ -23,7 +23,10 @@ module.exports = {
       },
     ],
   },
+  // NestJS 12 packages are ESM-only — load them natively (Node >= 24.9 + --experimental-vm-modules).
   transformIgnorePatterns: ['/node_modules/'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup-globals.ts'],
   testTimeout: 60_000,
+  // Avoid parallel suite teardown races with Nest ESM + open DB/Redis handles.
+  maxWorkers: 1,
 };

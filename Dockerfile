@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:22-alpine AS base
+FROM node:24-alpine AS base
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@10.1.0 --activate
 
@@ -15,7 +15,7 @@ COPY drizzle ./drizzle
 COPY scripts ./scripts
 RUN pnpm run build && pnpm prune --prod
 
-FROM node:22-alpine AS production
+FROM node:24-alpine AS production
 WORKDIR /app
 ENV NODE_ENV=production
 RUN corepack enable && corepack prepare pnpm@10.1.0 --activate \

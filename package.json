@@ -7,7 +7,7 @@
   "packageManager": "pnpm@10.1.0",
   "license": "MIT",
   "engines": {
-    "node": ">=22.12.0",
+    "node": ">=24.9.0",
     "pnpm": ">=10.1.0"
   },
   "scripts": {
@@ -29,7 +29,7 @@
     "test:watch": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./jest.config.cjs --watch",
     "test:cov": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./jest.config.cjs --coverage",
     "test:debug": "node --experimental-vm-modules --inspect-brk ./node_modules/jest/bin/jest.js --config ./jest.config.cjs --runInBand",
-    "test:e2e": "node ./scripts/run-with-node-env.mjs test node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./test/jest-e2e.config.cjs",
+    "test:e2e": "node ./scripts/run-with-node-env.mjs test node --experimental-vm-modules ./node_modules/jest/bin/jest.js --config ./test/jest-e2e.config.cjs --runInBand",
     "audit": "pnpm audit",
     "audit:security": "pnpm audit --prod",
     "db:generate": "drizzle-kit generate && pnpm db:diagram:generate",
