@@ -10,7 +10,7 @@ export class HealthController {
 
   @Get()
   @Public()
-  @ApiOperation({ summary: 'Liveness / readiness probe' })
+  @ApiOperation({ summary: 'Liveness / readiness probe (Postgres + Redis)' })
   check() {
     return this.healthService.check();
   }

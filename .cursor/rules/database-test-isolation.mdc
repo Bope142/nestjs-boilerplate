@@ -1,0 +1,40 @@
+---
+description: Always isolate e2e / Jest DB work on DATABASE_URL_TEST — never pollute DEV or PROD
+alwaysApply: true
+---
+
+# Database Test Isolation (`DATABASE_URL_TEST`)
+
+This boilerplate uses **three separate Postgres URLs** in `.env`:
+
+| Env var | When | Used by |
+|---------|------|---------|
+| `DATABASE_URL_DEV` | `NODE_ENV=development` (default) | `pnpm run start` / `pnpm run dev`, seeds, Postman local |
+| `DATABASE_URL_TEST` | `NODE_ENV=test` | **All** Jest e2e, `db:migrate:test`, `db:setup:test` |
+| `DATABASE_URL_PROD` | `NODE_ENV=production` | Deploy / migrate prod only |
+
+Resolver: [`src/database/database-url.ts`](src/database/database-url.ts).
+
+## Hard rules for the agent
+
+1. **E2e / integration DB work → only `DATABASE_URL_TEST`.** Prefer project scripts that already set `NODE_ENV=test`:
+   - `pnpm test:e2e`
+   - `pnpm db:migrate:test`
+   - `pnpm db:setup:test` / `pnpm db:ensure:test`
+   - `node ./scripts/run-with-node-env.mjs test <command>`
+2. **Never** run e2e, truncate, or “cleanup test fixtures” against `DATABASE_URL_DEV` or `DATABASE_URL_PROD`.
+3. **Never** point `DATABASE_URL_TEST` at the same database name as DEV/PROD (e.g. both `app_dev`). They must be distinct DB names.
+4. Before claiming e2e green after a schema change: migrate **test** (`pnpm db:migrate:test`), not only `pnpm db:migrate` (that hits DEV when `NODE_ENV` is development).
+5. Manual SQL / `psql` for tests: connect using the URL from `DATABASE_URL_TEST` only.
+6. If leftover e2e rows appear in client options on `pnpm run start`, the **DEV** DB was polluted — clean DEV with `pnpm db:cleanup:e2e-types` (targets current `resolveDatabaseUrl()`, so run with default `NODE_ENV=development`), and fix process so e2e only use TEST.
+
+## Anti-patterns
+
+- Running `jest --config ./test/jest-e2e.json` without `NODE_ENV=test` / without `run-with-node-env.mjs test`
+- `drizzle-kit migrate` while inventing test data on DEV
+- Sharing one Postgres database name across DEV and TEST
+- Seeding demo catalog into TEST expecting it for Postman (Postman → DEV)
+
+## Related skill
+
+Follow `.cursor/skills/database-test-isolation/SKILL.md` when writing or running e2e, migrating the test DB, or cleaning fixture pollution.

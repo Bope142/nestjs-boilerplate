@@ -14,4 +14,6 @@ After any code modification, bug fix, refactor, schema change, or feature additi
 
 Also run relevant tests and `pnpm typecheck` when those scripts exist and the change warrants them — but **lint is mandatory every time**.
 
+Before finishing: if anything listens on port **8020**, stop it (see `stop-dev-server-8020` rule). Do not leave `pnpm run dev` running — the user starts the server.
+
 Use the `verify-changes` skill for the full post-change checklist.

@@ -1,0 +1,48 @@
+---
+description: Encrypted Bearer middleware — every JWT controller must be in forRoutes or login tokens fail with bare 401
+globs:
+  - "src/**/*.module.ts"
+  - "src/**/*controller.ts"
+  - "src/common/middleware/encrypted-bearer-token.middleware.ts"
+alwaysApply: true
+---
+
+# Encrypted Bearer Token Middleware
+
+Login / refresh return **encrypted** access tokens (base64url envelope), not raw JWTs. `JwtAuthGuard` only accepts a raw JWT. Decryption happens in `EncryptedBearerTokenMiddleware` **before** the guard.
+
+Middleware: [`src/common/middleware/encrypted-bearer-token.middleware.ts`](src/common/middleware/encrypted-bearer-token.middleware.ts)
+
+## Mandatory wiring
+
+Every Nest controller that uses `JwtAuthGuard` (or inherits JWT auth) **must** be listed in its module’s:
+
+```ts
+consumer
+  .apply(EncryptedBearerTokenMiddleware)
+  .forRoutes(/* …controllers including the new one */);
+```
+
+Modules that already do this: `IdentityModule`, `CommunicationModule`. Add every new JWT controller module here.
+
+## Symptom of a miss
+
+- `GET /users/me` → **200** (Identity middleware applied)
+- New admin/client route → **401** `{ "code": "INTERNAL_SERVER_ERROR", "message": "Unauthorized" }` with a valid Postman Bearer from login
+- Request **never** appears in HTTP interceptor logs (guard fails before interceptors)
+
+That bare Passport `Unauthorized` (not `AUTH_*` / `COMMON_*`) almost always means the encrypted envelope never got decrypted.
+
+## Checklist for new / moved JWT controllers
+
+1. Register the controller in the module `controllers: […]`.
+2. Add the **same** controller class to `EncryptedBearerTokenMiddleware` `.forRoutes(…)`.
+3. Keep stack: `ApiKeyGuard` → `JwtAuthGuard` → `RolesGuard` (when roles apply).
+4. Confirm with a real Postman login token (encrypted), not a hand-crafted raw JWT.
+
+## Anti-patterns
+
+- Adding a JWT controller only to `controllers: []` and forgetting `forRoutes`
+- Applying middleware only to some sibling controllers in the same module
+- Assuming a raw JWT in Postman “proves” production auth (clients send encrypted envelopes)
+- Treating bare `401 Unauthorized` as an empty Postman variable when `/users/me` works with the same token

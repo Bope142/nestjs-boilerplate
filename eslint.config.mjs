@@ -28,7 +28,20 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn'
+      '@typescript-eslint/no-unsafe-argument': 'warn',
+    },
+  },
+  // NestJS 12 ships ESM-only packages; under CommonJS + projectService, e2e
+  // helpers (supertest / NestFactory) often resolve to the TypeScript `error`
+  // type and trip every no-unsafe-* rule. Keep recommendedTypeChecked for src/.
+  {
+    files: ['test/**/*.ts', 'tools/**/*.ts', 'src/**/*.spec.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
     },
   },
 );

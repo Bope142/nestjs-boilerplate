@@ -22,7 +22,8 @@ Use this skill when adding or changing tables, columns, constraints, enums, rela
 11. Generate a migration with `pnpm db:generate -- --name <snake_case_slug>` when that script exists; otherwise `pnpm exec drizzle-kit generate --name <snake_case_slug>`.
 12. Review generated SQL manually (extra care for money or audit tables).
 13. Add repository integration tests against PostgreSQL.
-14. Run `pnpm run lint` before considering the schema work done.
+14. Sync typed spec fixtures (`.cursor/skills/sync-schema-typed-fixtures/SKILL.md`) — `$inferSelect` object literals in `*.spec.ts`.
+15. Run `pnpm run lint` **and** `pnpm test` (not only `pnpm typecheck`; specs are excluded from `tsconfig.build.json`) before considering the schema work done.
 
 ## Required decisions
 
@@ -73,6 +74,7 @@ Never keep random Drizzle migration names (e.g. `lively_mephistopheles`). Do not
 - [ ] No sensitive plaintext token.
 - [ ] Migration SQL reviewed.
 - [ ] PostgreSQL integration tests added.
+- [ ] Typed spec fixtures (`$inferSelect` / mapper rows) updated; `pnpm test` compiles them.
 
 ## Migration safety
 

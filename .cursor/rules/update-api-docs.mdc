@@ -1,0 +1,35 @@
+---
+description: Keep Swagger/OpenAPI, Postman, and frontend handoff docs in sync when APIs or resources change
+alwaysApply: true
+---
+
+# Update API Docs On Every Change
+
+Whenever you add, change, or remove an HTTP endpoint, DTO field, resource, enum, auth requirement, or response shape:
+
+1. Update NestJS Swagger (`@ApiTags`, `@ApiOperation`, `@ApiProperty` / `@ApiPropertyOptional`, `@ApiOkResponse` / `@ApiCreatedResponse`, guards headers, examples).
+2. Keep request/response DTOs accurate — every public field clients send or receive must appear in Swagger.
+3. Update Postman (`postman/collections/nestjs-boilerplate.postman_collection.json`) for the same change when the collection covers that flow. Requests that send a body must use **raw JSON** (`body.options.raw.language: "json"`) + `Content-Type: application/json` (see `postman-json-body` rule/skill).
+4. When the change is for a frontend handoff, update or create matching Markdown under `docs/` in the same change.
+5. Do not finish the task until docs match the implementation (no stale examples, missing fields, or wrong status codes).
+
+## Required for new fields
+
+- Document enum values and defaults (e.g. `locale`: `fr` | `en`, default `fr`).
+- Document auth (`x-api-key`, Bearer) and optional headers (`x-lang`) when they affect behavior.
+
+## Required for frontend handoff Markdown (`docs/`)
+
+When writing or updating API docs meant for frontend developers:
+
+1. **List every enum** used in query, body, or response (full value set, not “see Swagger”).
+2. **Mark nullable fields explicitly** (`string | null`, table column “Nullable: Oui/Non”). Never imply a field is always present if the DTO allows `null`.
+3. Distinguish **optional query/body** (omitted) from **nullable response** (`null` in JSON).
+4. Include auth headers, roles, pagination, error `code`s, and cache notes when relevant.
+
+## Anti-patterns
+
+- Shipping a new body/query/path field without `@ApiProperty*`
+- Changing a response without updating the response DTO / `@ApiOkResponse`
+- Adding `PATCH`/`POST` resources without Postman request when Auth/Users flows exist in the collection
+- Frontend Markdown that lists fields without enums or without saying which can be `null`

@@ -1,0 +1,50 @@
+---
+description: Prevent Jest pre-push flakes from open handles, fake timers, and parallel worker SIGTERM / module-resolution races
+globs:
+  - "src/**/*.spec.ts"
+  - "test/**/*.ts"
+  - "package.json"
+  - "test/jest-e2e.json"
+alwaysApply: false
+---
+
+# Jest Teardown & Open Handles
+
+Pre-push runs full `pnpm test`. Flakes that pass in isolation but fail under the full worker pool often look like:
+
+- `A worker process has failed to exit gracefully… Try running with --detectOpenHandles`
+- `Active timers can also cause this, ensure that .unref() was called on them`
+- `jest worker process was terminated … signal=SIGTERM` on an **unrelated** suite
+- `Cannot find module './isValid.js' from '…/libphonenumber-js/…'` under parallel load (OneDrive / Windows)
+
+## Required teardown in specs
+
+1. **Fake timers** — pair every `jest.useFakeTimers()` with `jest.useRealTimers()` in `afterEach` (not only `afterAll`). Global setup already restores real timers after each test; still restore locally so a mid-suite failure cannot leave fakes active.
+2. **Spies** — `jest.spyOn(...)` → `jest.restoreAllMocks()` in `afterEach`.
+3. **Handles** — close Redis / DB / HTTP / Socket / BullMQ clients in `afterAll` / `onModuleDestroy`. Prefer `timer.unref()` for intentional long-lived timers outside tests.
+4. **Temp files** — `try/finally` cleanup (see `excel-heavy-unit-tests`).
+
+## Do not paper over leaks
+
+- Prefer fixing teardown over adding `--forceExit` to the default `pnpm test` / pre-push path.
+- Use `pnpm test:detect-handles` (`--detectOpenHandles --runInBand`) when diagnosing hangs or SIGTERM collateral failures.
+
+## Jest config invariants (unit)
+
+Keep in `package.json` → `jest`:
+
+- `setupFilesAfterEnv` → `test/jest.setup-after-env.ts` (restores real timers)
+- `moduleNameMapper` for `^libphonenumber-js$` → CJS `min/index.cjs` (stable under Jest/pnpm)
+- `maxWorkers: 1` (serial unit runs — avoids OneDrive / Windows parallel FS races and sibling-worker SIGTERM; do not raise without re-checking full `pnpm test` on the slowest machine)
+- Default `testTimeout` ≥ 20s (slow transforms on synced disks)
+- `openHandlesTimeout` ≥ 10s (OneDrive workers often exit slowly without a real leak; a too-short wait prints the teardown warning and can SIGTERM a sibling suite)
+
+Mirror the libphonenumber mapper + setup in `test/jest-e2e.json` when e2e pulls the same package.
+
+## Diagnosis checklist
+
+1. Re-run the **named** failing file with `--runInBand` — if green, treat as pool/teardown flake, not logic.
+2. `pnpm test:detect-handles` (or narrow `--testPathPattern`) and fix every reported handle / timer.
+3. Re-run full `pnpm test` before claiming push is unblocked.
+
+Incident to prevent: `merchant-settlements.service.spec.ts` failing on `libphonenumber-js` + `products.service.spec.ts` SIGTERM during pre-push while both pass alone.

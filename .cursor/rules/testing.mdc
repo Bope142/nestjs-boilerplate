@@ -40,6 +40,10 @@ Prefer IDOR and permission tests over hypothetical multi-tenant cases.
 
 Independent tests; reset DB state; deterministic factories; no production credentials; mock mail/SMS/queues.
 
+### PostgreSQL URL isolation (mandatory)
+
+E2e and Jest DB work **must** use `DATABASE_URL_TEST` via `NODE_ENV=test` (`pnpm test:e2e`, `pnpm db:migrate:test`, `pnpm db:setup:test`). Never run e2e against `DATABASE_URL_DEV` / `DATABASE_URL_PROD`. DEV and TEST must be **different** database names. See always-applied rule `database-test-isolation` and skill `.cursor/skills/database-test-isolation/SKILL.md`. If e2e fixtures pollute client options on `pnpm run start`, clean DEV with `pnpm db:cleanup:e2e-types`.
+
 ## Naming
 
 Behavior-focused: `it('rejects refresh when session is revoked')` — not `it('works')`.
@@ -50,13 +54,36 @@ Behavior-focused: `it('rejects refresh when session is revoked')` — not `it('w
 - Do not mock the service under test.
 - Mock external I/O through interfaces.
 
+## Excel / heavy filesystem unit tests
+
+Specs that build real `.xlsx` via ExcelJS (merchant import, templates, parsers) are I/O-bound. Under a full `pnpm test` worker pool — and especially when the repo lives under OneDrive — they often exceed Jest’s default **5s** timeout even though they pass in isolation.
+
+When adding or editing such specs:
+
+1. Call `jest.setTimeout(30_000)` (or higher) at the **describe** level — do not rely on the default 5s.
+2. Prefer `workbook.xlsx.writeBuffer()` + `fs.writeFile` over `writeFile` on the workbook when practical; write sibling files with `Promise.all`.
+3. Always clean temp dirs in `try/finally` (`fs.rm(..., { recursive: true, force: true })`).
+4. Before claiming push/CI green: run the **narrow** file, then at least once the suite path that pre-push runs (`pnpm test`). A green isolated run is not enough for Excel-heavy specs.
+
+Incident to prevent: `merchant-imports.validator.spec.ts` timed out at 5s on push while passing alone → blocked `git push`.
+
+## Teardown, open handles, parallel flakes
+
+Pre-push failures that mention `--detectOpenHandles`, active timers / `.unref()`, worker `SIGTERM`, or flaky `libphonenumber-js` `Cannot find module './isValid.js'` while the file passes alone: follow always-on guidance in rule `jest-teardown-open-handles` and skill `.cursor/skills/jest-teardown-open-handles/SKILL.md`.
+
+- Restore fake timers in `afterEach`; close Redis/DB/HTTP/Socket clients; do not add `--forceExit` to default `pnpm test`.
+- Diagnose with `pnpm test:detect-handles`.
+- Keep Jest `maxWorkers: "50%"`, libphonenumber CJS `moduleNameMapper`, and `test/jest.setup-after-env.ts`.
+
 ## Commands
 
 ```bash
 pnpm test
 pnpm test:watch
 pnpm test:cov
-pnpm test:e2e
+pnpm db:setup:test   # ensure + migrate DATABASE_URL_TEST
+pnpm test:e2e        # NODE_ENV=test → DATABASE_URL_TEST
+pnpm db:cleanup:e2e-types  # deactivate e2e merchant_types on current resolveDatabaseUrl()
 ```
 
 ## Completion rule
@@ -67,6 +94,8 @@ After implementation:
 2. Narrowest relevant tests.
 3. Module/integration/e2e for changed boundaries.
 4. `pnpm typecheck` when types or schema changed.
-5. Report commands executed honestly.
+5. After a **schema column** change: update typed fixtures (`sync-schema-typed-fixtures` skill) and run `pnpm test` — `typecheck` excludes `**/*spec.ts`.
+6. For Excel / heavy FS specs: confirm timeout budget + run under full `pnpm test` pressure when those files changed.
+7. Report commands executed honestly.
 
 Never claim tests pass unless executed.

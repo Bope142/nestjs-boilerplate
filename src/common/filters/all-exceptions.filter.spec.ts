@@ -1,7 +1,16 @@
+import { jest } from '@jest/globals';
 import { ArgumentsHost, HttpStatus } from '@nestjs/common';
-import { I18nContext } from 'nestjs-i18n';
 import { DomainError } from '../exceptions/domain.error';
-import { AllExceptionsFilter } from './all-exceptions.filter';
+
+const current = jest.fn();
+
+jest.unstable_mockModule('nestjs-i18n', () => ({
+  I18nContext: { current },
+  I18nValidationException: class I18nValidationException extends Error {},
+  I18nValidationError: class I18nValidationError {},
+}));
+
+const { AllExceptionsFilter } = await import('./all-exceptions.filter');
 
 describe('AllExceptionsFilter', () => {
   const filter = new AllExceptionsFilter();
@@ -58,21 +67,21 @@ describe('AllExceptionsFilter', () => {
   }
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    current.mockReset();
   });
 
   it('translates DomainError to French by default', () => {
-    const translate = jest.fn().mockImplementation((key: string) => {
+    const translate = jest.fn((key: string) => {
       if (key === 'errors.auth.AUTH_INVALID_CREDENTIALS') {
         return 'Adresse e-mail ou mot de passe incorrect.';
       }
       return key;
     });
 
-    jest.spyOn(I18nContext, 'current').mockReturnValue({
+    current.mockReturnValue({
       lang: 'fr',
       service: { translate },
-    } as never);
+    });
 
     const { host, getResult } = createHost();
     filter.catch(
@@ -92,17 +101,17 @@ describe('AllExceptionsFilter', () => {
   });
 
   it('translates DomainError to English when Accept-Language is en', () => {
-    const translate = jest.fn().mockImplementation((key: string) => {
+    const translate = jest.fn((key: string) => {
       if (key === 'errors.auth.AUTH_EMAIL_NOT_VERIFIED') {
         return 'Email address must be verified to access this resource.';
       }
       return key;
     });
 
-    jest.spyOn(I18nContext, 'current').mockReturnValue({
+    current.mockReturnValue({
       lang: 'en',
       service: { translate },
-    } as never);
+    });
 
     const { host, getResult } = createHost('en');
     filter.catch(
@@ -120,12 +129,12 @@ describe('AllExceptionsFilter', () => {
   });
 
   it('falls back to the i18n key when translation is missing', () => {
-    const translate = jest.fn().mockImplementation((key: string) => key);
+    const translate = jest.fn((key: string) => key);
 
-    jest.spyOn(I18nContext, 'current').mockReturnValue({
+    current.mockReturnValue({
       lang: 'en',
       service: { translate },
-    } as never);
+    });
 
     const { host, getResult } = createHost('en');
     filter.catch(

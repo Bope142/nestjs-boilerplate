@@ -1,6 +1,6 @@
 # Dependency upgrades
 
-Keep dependencies current without breaking the build. This project pins Node 22 and pnpm 10.1.0 in `package.json` / CI.
+Keep dependencies current without breaking the build. Runtime target: **NestJS 12**, **TypeScript 6**, **Node ≥ 22.12** (Jest Nest ESM needs Node 24.9+ with `--experimental-vm-modules` on some platforms).
 
 ## Weekly automation
 
@@ -13,10 +13,9 @@ Major Nest or Drizzle upgrades should be intentional, not automatic.
 
 ## Manual upgrade process
 
-1. **Read changelogs** for NestJS, Drizzle, BullMQ, and any security advisories.
-2. **Create a branch** (`chore/deps-YYYY-MM`).
-3. **Update one logical group at a time** (e.g. Nest patch, then devDependencies).
-4. **Run locally:**
+1. Read changelogs for NestJS, Drizzle, BullMQ, and security advisories.
+2. Update one logical group at a time.
+3. Run:
 
 ```bash
 pnpm install
@@ -24,34 +23,23 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
+pnpm audit --prod
 ```
 
-5. **Fix breaking changes** in small commits with clear messages.
-6. **Open PR** with summary of versions and any migration notes.
+4. For Drizzle bumps, also run `pnpm db:check` and `pnpm db:diagram:check`.
 
-## NestJS major upgrades
+## NestJS majors
 
-- Review [NestJS migration guide](https://docs.nestjs.com/migration-guide) for the target major.
-- Update `@nestjs/*`, `@nestjs/cli`, and `@nestjs/schematics` together.
-- Re-run code generation schematics only if you rely on them.
-- Pay attention to Express/Fastify peer changes and Swagger compatibility.
+Update `@nestjs/*`, `@nestjs/cli`, and `@nestjs/schematics` together. Follow https://docs.nestjs.com/migration-guide.
 
-## Drizzle upgrades
+Nest 12 packages are ESM-only. Jest scripts already pass `--experimental-vm-modules`.
 
-- Run `pnpm db:check` after upgrading `drizzle-orm` / `drizzle-kit`.
-- Regenerate nothing unless schema changed; verify existing migrations still apply on a fresh DB.
+## Security
 
-## Security patches
-
-- Prioritize `pnpm audit` findings on production dependencies.
-- Patch quickly; if a major bump is required, follow the major upgrade process above.
+- Prioritize `pnpm audit --prod`.
+- Document residual **dev-only** findings in `docs/security/dependency-audit.md`.
+- Never silence advisories with `--audit-level` tricks.
 
 ## Lockfile
 
-Always commit `pnpm-lock.yaml`. Use `pnpm install --frozen-lockfile` in CI and Docker builds.
-
-## Do not
-
-- Mix npm/yarn with pnpm.
-- Skip tests on dependency-only PRs.
-- Enable auto-merge for Dependabot PRs without review.
+Always commit `pnpm-lock.yaml`. Use `pnpm install --frozen-lockfile` in CI and Docker.

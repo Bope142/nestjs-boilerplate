@@ -1,0 +1,37 @@
+---
+description: Postman requests that send data must use raw JSON body mode
+globs:
+  - "postman/**/*.json"
+alwaysApply: false
+---
+
+# Postman JSON Body
+
+Any Postman request that **sends a body** (`POST` / `PUT` / `PATCH` with payload) must use **raw JSON**, not text, form-data, or urlencoded (unless the API truly expects multipart/file upload).
+
+## Required shape
+
+```json
+"body": {
+  "mode": "raw",
+  "raw": "{\n  \"field\": \"value\"\n}",
+  "options": {
+    "raw": {
+      "language": "json"
+    }
+  }
+}
+```
+
+Also set header `Content-Type: application/json` on those requests.
+
+## Bodyless actions
+
+`POST`/`PATCH` that only use path/query (logout, accept order, toggle favorite, flush cache, …) may omit `body`. Do not invent an empty `{}` unless the DTO requires it.
+
+## Checklist when adding/editing Postman requests
+
+1. If the Nest endpoint has a body DTO → raw JSON + `options.raw.language: "json"` + `Content-Type: application/json`.
+2. Valid JSON in `raw` (double quotes, trailing commas forbidden).
+3. Match DTO field names and enums from Swagger / `docs/`.
+4. Never leave Postman Body type as Text / HTML / XML for JSON APIs.

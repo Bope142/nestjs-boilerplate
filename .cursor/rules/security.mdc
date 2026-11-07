@@ -20,12 +20,17 @@ Treat every external input as untrusted. Defense in depth: authentication, autho
 - Rotate refresh tokens; revoke families on reuse when supported.
 - OTP, reset, and magic-link tokens: random, hashed at rest, single-use, expiring.
 - Avoid account enumeration in auth error messages.
+- Issue encrypted bearer envelopes; decrypt via `EncryptedBearerTokenMiddleware` before `JwtAuthGuard`.
 
 ## Authorization
 
 Authentication is not authorization. Verify active account, required role/permission, resource policy, and allowed state transitions on protected actions.
 
-Prefer permission decorators and central guards over scattered role checks.
+Prefer role/permission decorators and central guards over scattered role checks.
+
+Typical authenticated stack: `ApiKeyGuard` → `JwtAuthGuard` → `RolesGuard` (when roles apply).
+
+Built-in roles: `SUPER_ADMIN` | `ADMIN` | `USER`.
 
 ## Validation
 
@@ -74,4 +79,4 @@ Stable shape and codes; no stack traces, SQL text, or internal hostnames.
 
 ## Dependency security
 
-Commit lockfile; review new dependencies; run audits in CI.
+Commit lockfile; review new dependencies; run `pnpm audit` / `pnpm audit:security` in CI. Do not suppress advisories with audit-level tricks.

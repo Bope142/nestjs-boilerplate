@@ -40,21 +40,30 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   const appName = process.env.APP_NAME?.trim() || 'NestJS Boilerplate';
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle(`${appName} API`)
-    .setDescription(`${appName} REST API`)
-    .setVersion('1.0')
-    .addApiKey({ type: 'apiKey', name: 'x-api-key', in: 'header' }, 'api-key')
-    .addBearerAuth()
-    .build();
-  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, swaggerDocument, {
-    jsonDocumentUrl: 'api/docs-json',
-  });
+  const swaggerEnabled =
+    (process.env.SWAGGER_ENABLED ?? '').toLowerCase() === 'true' ||
+    ((process.env.SWAGGER_ENABLED ?? '') === '' &&
+      process.env.NODE_ENV !== 'production');
+
+  if (swaggerEnabled) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle(`${appName} API`)
+      .setDescription(`${appName} REST API`)
+      .setVersion('1.0')
+      .addApiKey({ type: 'apiKey', name: 'x-api-key', in: 'header' }, 'api-key')
+      .addBearerAuth()
+      .build();
+    const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api/docs', app, swaggerDocument, {
+      jsonDocumentUrl: 'api/docs-json',
+    });
+  }
 
   const port = Number(process.env.PORT);
   await app.listen(port);
   logger.log(`Server is running on http://localhost:${port}`);
-  logger.log(`Swagger is running on http://localhost:${port}/api/docs`);
+  if (swaggerEnabled) {
+    logger.log(`Swagger is running on http://localhost:${port}/api/docs`);
+  }
 }
 void bootstrap();

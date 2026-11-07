@@ -69,10 +69,19 @@ pnpm exec drizzle-kit generate --name <snake_case_slug>
 7. Inspect every SQL statement.
 8. Check forward compatibility with the currently deployed application.
 9. Add a custom migration or staged backfill when generation is insufficient (`pnpm exec drizzle-kit generate --custom --name <slug>`).
-10. Run migration against an isolated PostgreSQL database.
-11. Run `pnpm run lint`.
-12. Run repository and e2e tests.
-13. Document deployment order and rollback or forward-fix plan.
+10. Sync Draw.io documentation (mandatory):
+
+```bash
+pnpm db:diagram:generate
+pnpm db:diagram:check
+```
+
+Activate skill `database-diagram-generator`. A migration is **not complete** without diagram sync.
+11. Run migration against an isolated PostgreSQL **TEST** database (`pnpm db:migrate:test`).
+12. Run `pnpm run lint`.
+13. Run repository and e2e tests.
+14. Document deployment order and rollback or forward-fix plan.
+15. Commit SQL + `drizzle/meta/*` + `docs/database/database-architecture.drawio` together.
 
 ## Review checklist
 
@@ -90,9 +99,11 @@ pnpm exec drizzle-kit generate --name <snake_case_slug>
 - [ ] Enum modifications are safe.
 - [ ] Backfill is deterministic and restartable.
 - [ ] Application compatibility is preserved.
-- [ ] Migration ran on PostgreSQL.
+- [ ] Migration ran on PostgreSQL TEST (`pnpm db:migrate:test`).
+- [ ] Draw.io page `00` updated and new history page present (`pnpm db:diagram:check`).
 - [ ] `pnpm run lint` passed.
 - [ ] Tests pass.
+- [ ] Typed spec fixtures updated for new/renamed columns (`sync-schema-typed-fixtures`); `pnpm test` compiles specs (`typecheck` does not).
 
 ## Prohibited behavior
 

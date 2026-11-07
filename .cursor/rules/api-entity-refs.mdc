@@ -1,0 +1,53 @@
+---
+description: Prefer nested entity refs (id + display name) over bare foreign-key IDs in API responses
+alwaysApply: true
+---
+
+# API Entity Refs (users, merchants, …)
+
+When an API response references another entity the UI may need to **display** (user, merchant, rider, …), do **not** return only a bare UUID.
+
+## Prefer
+
+```json
+{
+  "confirmedBy": { "id": "…", "name": "Alice Admin", "avatarUrl": null },
+  "rejectedBy": null,
+  "merchant": { "id": "…", "name": "Restaurant ABC", "logo": null }
+}
+```
+
+## Avoid (for displayable refs)
+
+```json
+{
+  "confirmedByUserId": "uuid-only",
+  "rejectedByUserId": null
+}
+```
+
+Bare IDs remain OK for **path params**, **request bodies**, filters, and internal joins — not as the sole representation of a related actor the front must label.
+
+## Shared DTOs
+
+Use the shared shapes in [`src/common/dto/entity-ref.dto.ts`](src/common/dto/entity-ref.dto.ts):
+
+| Ref | Fields | Name source |
+|-----|--------|-------------|
+| `UserRefDto` | `id`, `name`, `avatarUrl` | `displayName` else `firstName + lastName` |
+| `MerchantRefDto` | `id`, `name`, `logo` | `business_name` |
+
+Helpers: [`src/common/utils/entity-ref.mapper.ts`](src/common/utils/entity-ref.mapper.ts) (`mapUserRef`, `mapMerchantRef`, `buildUserRefMap`).
+
+## Nullability
+
+- Actor not set yet (e.g. not confirmed) → **`null`** for the whole object (`confirmedBy: null`).
+- Actor set but user row missing (soft-deleted) → still return `{ id, name: fallback, avatarUrl: null }` — never omit `name`.
+
+## Checklist for new / changed responses
+
+1. Identify every `*UserId` / `*MerchantId` / similar FK exposed for UI display.
+2. Replace with a nested ref DTO (or add the nest and deprecate the bare id in the same change).
+3. Document nullable refs in Swagger + `docs/*.md` (enums + nullability).
+4. Batch-load refs in list endpoints (`findByIds` + `buildUserRefMap`) — no N+1.
+5. Do not force the front to call `/users/:id` just to show a name.

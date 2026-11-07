@@ -1,6 +1,17 @@
+import { jest } from '@jest/globals';
 import { DomainError } from '../../../common/exceptions/domain.error';
-import { GoogleTokenVerifierService } from './google-token-verifier.service';
 import { AuthErrorCodes } from '../errors/auth.errors';
+
+const verifyIdToken = jest.fn();
+
+jest.unstable_mockModule('google-auth-library', () => ({
+  OAuth2Client: class {
+    verifyIdToken = verifyIdToken;
+  },
+}));
+
+const { GoogleTokenVerifierService } =
+  await import('./google-token-verifier.service');
 
 describe('GoogleTokenVerifierService', () => {
   beforeAll(() => {
@@ -13,6 +24,11 @@ describe('GoogleTokenVerifierService', () => {
     process.env.API_ACCESS_KEY = 'api';
     process.env.FRONTEND_BASE_URL = 'http://localhost:5173';
     process.env.SESSION_CLEANUP_DAYS = '30';
+  });
+
+  beforeEach(() => {
+    verifyIdToken.mockReset();
+    verifyIdToken.mockRejectedValue(new Error('invalid token'));
   });
 
   it('rejects an invalid Google ID token', async () => {
